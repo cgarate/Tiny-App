@@ -1,0 +1,26 @@
+{
+  "name": "expresswebserver",
+  "version": "1.0.0",
+  "description": "A quick exercise with Express to create a web server.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Carlos M. Garate",
+  "license": "ISC",
+  "dependencies": {
+    "ejs": "^2.5.6",
+    "express": "^4.15.2",
+    "nodemon": "^1.11.0"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cgarate/expresswebserver.git"
+  },
+  "keywords": [],
+  "bugs": {
+    "url": "https://github.com/cgarate/expresswebserver/issues"
+  },
+  "homepage": "https://github.com/cgarate/expresswebserver#readme"
+}

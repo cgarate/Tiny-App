@@ -1,0 +1,17 @@
+<html lang="en">
+<head>
+  <title>Tiny App</title>
+</head>
+
+<body>
+<% include partials/_header %>
+<ul>
+<% Object.keys(urls).forEach(function(url) { %>
+  <li><%= urls[url] %> - <%= url %></li>
+<% }); %>
+</ul>
+<p><a href="#">Shorten a new URL</a></p>
+
+</body>
+
+</html
