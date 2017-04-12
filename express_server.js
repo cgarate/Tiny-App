@@ -13,11 +13,24 @@ app.use(cookieParser());
 // Using EJS as a template engine
 app.set("view engine", "ejs");
 
-var urlDatabase = {
+const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com",
   "c1tI2c": "http://www.garatephotography.com"
 };
+
+const users = {
+  "userRandomID": {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur"
+  },
+ "user2RandomID": {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk"
+  }
+}
 
 const alphaNum = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
@@ -108,8 +121,12 @@ app.get("/register", (req, res) => {
   res.render("urls_register");
 });
 
+// Inserts a new user
 app.post("/register", (req, res) => {
-  console.log(req.body);
+  let tempID = generateRandomString(10, alphaNum);
+  users[tempID] = {id: tempID, email: req.body.email, password: req.body.password};
+  res.cookie("user_id", tempID);
+  res.redirect("/urls")
 });
 
 app.listen(PORT, () => {
