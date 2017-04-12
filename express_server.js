@@ -103,6 +103,15 @@ app.post("/logout", (req, res) => {
   res.redirect("/urls")
 });
 
+// Creates a register endpoint.
+app.get("/register", (req, res) => {
+  res.render("urls_register");
+});
+
+app.post("/register", (req, res) => {
+  console.log(req.body);
+});
+
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
