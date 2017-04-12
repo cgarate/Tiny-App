@@ -40,6 +40,15 @@ function generateRandomString(length, chars) {
     return result;
 }
 
+function getEmailList(o) {
+  let arrayOfUserIDs = Object.keys(o);
+  let resArray = [];
+  for (let id of arrayOfUserIDs) {
+    resArray.push(o[id].email);
+  }
+  return resArray;
+}
+
 // Redirect / to URLs
 app.get("/", (req, res) => {
   res.redirect("/urls");
@@ -113,7 +122,7 @@ app.post("/login", (req, res) => {
 // Receives the request to delete the userrname cookie, deletes and reirects to home.
 app.post("/logout", (req, res) => {
   res.clearCookie("username");
-  res.redirect("/urls")
+  res.redirect("/urls");
 });
 
 // Creates a register endpoint.
@@ -123,10 +132,23 @@ app.get("/register", (req, res) => {
 
 // Inserts a new user
 app.post("/register", (req, res) => {
-  let tempID = generateRandomString(10, alphaNum);
-  users[tempID] = {id: tempID, email: req.body.email, password: req.body.password};
-  res.cookie("user_id", tempID);
-  res.redirect("/urls")
+
+  let emailExists = getEmailList(users).some((e) => {return e === req.body.email});
+  console.log(users);
+  console.log(emailExists);
+  if (req.body.email === "" || req.body.password === "") {
+    res.sendStatus(400);
+  } else if (emailExists) {
+    res.sendStatus(400);
+  } else {
+    let tempID = generateRandomString(10, alphaNum);
+    users[tempID] = {id: tempID, email: req.body.email, password: req.body.password};
+    res.cookie("user_id", tempID);
+    res.redirect("/urls");
+  }
+
+
+
 });
 
 app.listen(PORT, () => {
