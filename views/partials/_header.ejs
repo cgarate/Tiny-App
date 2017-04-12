@@ -1,7 +1,19 @@
 
 <h1><a href="/urls">Tiny App</a></h1>
 
-<form action="/login" method="post">
-  <input type="text" name="username">
-  <button type="submit">Submit</button>
-</form>
+
+<% if(username === undefined){ %>
+
+  <form action="/login" method="post">
+    <input type="text" name="username">
+    <button type="submit">Submit</button>
+  </form>
+
+<% } else{ %>
+
+<p><%= username %>
+  <form action="/logout" method="post"><button type="submit">Logout</button></form>
+</p>
+
+<% } %>
+
