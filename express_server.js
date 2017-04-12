@@ -132,22 +132,24 @@ app.get("/register", (req, res) => {
 
 // Inserts a new user
 app.post("/register", (req, res) => {
-
+  // get an array of all the emails in the users object.
+  // Use some to check if any of them matches the one sent by the user wanting to register.
   let emailExists = getEmailList(users).some((e) => {return e === req.body.email});
-  console.log(users);
-  console.log(emailExists);
+
+  // Don't allow empty email or password to come in.
   if (req.body.email === "" || req.body.password === "") {
+    // Bad request!
     res.sendStatus(400);
+  // Send Bad Request if the email exists already.
   } else if (emailExists) {
     res.sendStatus(400);
+  // if all good generate a new id and create a new key with the new registration info and set a cookie with the ID.
   } else {
     let tempID = generateRandomString(10, alphaNum);
     users[tempID] = {id: tempID, email: req.body.email, password: req.body.password};
     res.cookie("user_id", tempID);
     res.redirect("/urls");
   }
-
-
 
 });
 
