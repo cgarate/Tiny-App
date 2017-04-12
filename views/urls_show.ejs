@@ -6,8 +6,15 @@
 <body>
 <% include partials/_header %>
 <ul>
-  <li><%= urls[shortURL] %> - <%= shortURL %></li>
+  <li>Short URL: <%= shortURL %>
+    <form action="/urls/<%= shortURL %>" method="POST">
+      <label for="longURL">Type any updates to the URL:</label>
+      <input type="text" name="longURL" value="<%= urls[shortURL] %>" style="width: 300px">
+      <button type="submit">Update</button>
+    </form>
+  </li>
 </ul>
+
 </body>
 
 </html

@@ -9,7 +9,13 @@
 <% include partials/_header %>
 <ul>
 <% Object.keys(urls).forEach(function(url) { %>
-  <li><%= urls[url] %> - <%= url %></li>
+  <li>
+  <%= url %> --> <a href="<%= urls[url] %>" target="_new"><%= urls[url] %></a>
+  <a href="/urls/<%= url %>">Edit</a>
+  <form method="POST" action="/urls/<%= url %>/delete">
+    <button type="submit">Delete</button>
+  </form>
+  </li>
 <% }); %>
 </ul>
 <p><a href="/urls/new">Shorten a new URL</a></p>
