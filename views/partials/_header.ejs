@@ -1,9 +1,15 @@
 
 <h1><a href="/urls">Tiny App</a></h1>
 
-<% if(user_id === undefined){ %>
+<% if (user_id === undefined) { %>
   <p><a href="/register">Register</a></p>
-<% } else{ %>
-  <p><a href="/login">Login</a></p>
+<% } else { %>
+  <p>
+    <a href="/login">Login</a> /
+    <form action="/logout" method="POST">
+      <button type="submit">Logout</button>
+    </form>
+  </p>
+  <p>
 <% } %>
 
