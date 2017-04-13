@@ -3,6 +3,7 @@
 const express = require('express');
 const cookieParser = require('cookie-parser')
 const bodyParser = require("body-parser");
+const bcrypt = require('bcrypt');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -17,27 +18,28 @@ const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com",
   "c1tI2c": "http://www.garatephotography.com",
-  "8e3tv1": "http://www.garateca.com"
+  "8e3tv1": "http://www.garateca.com",
+  "4ttQiE": "http://tamarilana.com"
 };
 
 const users = {
-  "userRandomID": {
-    id: "userRandomID",
-    email: "user@example.com",
-    password: "123",
-    shorturls: ["9sm5xK"]
+  "GxCvqkBqjb": {
+    "id": "GxCvqkBqjb",
+    "email": "cgarate@yahoo.com",
+    "password": "$2a$10$wIKnpO0g24PpSHLpkKN04eQsY1exMqZ64Tz.E6x35MI5KuA5tfiSi",
+    "shorturls": ["b2xVn2","9sm5xK"]
   },
- "user2RandomID": {
-    id: "user2RandomID",
-    email: "user2@example.com",
-    password: "dishwasher-funk",
-    shorturls: []
+  "uzkdmiPXse": {
+    "id": "uzkdmiPXse",
+    "email": "carlos.m.garate@gmail.com",
+    "password": "$2a$10$fmIWP1ik263MiUv2D0lMku66VWP/1cPL7jL78wBLBmL7ASU/bDiSO",
+    "shorturls": ["c1tI2c","8e3tv1"]
   },
-  "W3Rtzs9ja1": {
-    id: "W3Rtzs9ja1",
-    email: "carlos.m.garate@gmail.com",
-    password: "qwerty",
-    shorturls: ["c1tI2c","8e3tv1"]
+  "iYy4FTIhWe": {
+    "id": "iYy4FTIhWe",
+    "email": "tamarilana@gmail.com",
+    "password": "$2a$10$/03iiHJRNgKAxf7FaHFz/uh69zxpV9/yxl.UkgkPF.C/p9HkIEcXG",
+    "shorturls": ["4ttQiE"]
   }
 }
 
@@ -66,7 +68,7 @@ function emailExists(o, email) {
 function validEmailPassword(o, email, password) {
   let arrayOfUserIDs = Object.keys(o);
   for (let item of arrayOfUserIDs) {
-    if (o[item].email === email && o[item].password === password) {
+    if (o[item].email === email && bcrypt.compareSync(password, o[item].password)) {
       return true;
     }
   }
@@ -76,7 +78,7 @@ function validEmailPassword(o, email, password) {
 function getUserID(o, email, password) {
   let arrayOfUserIDs = Object.keys(o);
   for (let item of arrayOfUserIDs) {
-    if (o[item].email === email && o[item].password === password) {
+    if (o[item].email === email && bcrypt.compareSync(password, o[item].password)) {
       return o[item].id;
     }
   }
@@ -128,14 +130,20 @@ app.get("/urls", (req, res) => {
 app.post("/urls", (req, res) => {
   let tempShort = generateRandomString(6, alphaNum);
   urlDatabase[tempShort] = req.body.longURL;
+  users[req.cookies["user_id"]].shorturls.push(tempShort);
   res.redirect(`/urls/${tempShort}`);
 });
 
 // Receives the request to delete a URL. Deletes the key and redirects to home.
 app.post("/urls/:id/delete", (req, res) => {
   let user_id = req.cookies["user_id"];
-  if (users[user_id].shorturl === req.params.id) {
+  // Find the index of the element in the array of shorturls that belong to the user.
+  let index = users[user_id].shorturls.findIndex(e => e === req.params.id);
+
+  if (users[user_id].shorturls[index] === req.params.id) {
     delete urlDatabase[req.params.id];
+    // Remove the URL from the users' array.
+    users[user_id].shorturls.splice(index, 1);
     res.redirect("/urls");
   } else {
     res.sendStatus(403);
@@ -166,7 +174,9 @@ app.post("/urls/:id", (req, res) => {
   if (user_id === undefined) {
     res.redirect("/urls");
   } else {
-    if (users[user_id].shorturl === req.params.id) {
+    // Find the index of the element in the array of shorturls that belong to the user.
+    let index = users[user_id].shorturls.findIndex(e => e === req.params.id);
+    if (users[user_id].shorturls[index] === req.params.id) {
       urlDatabase[req.params.id] = req.body.longURL;
       res.redirect("/urls");
     } else {
@@ -192,6 +202,7 @@ app.post("/login", (req, res) => {
         res.redirect("/urls");
       // Otherwise cookie is fine just redirect.
       } else {
+        res.cookie("user_id", getUserID(users, reqEmail, reqPassword));
         res.redirect("/urls");
       }
     } else {
@@ -231,7 +242,10 @@ app.post("/register", (req, res) => {
   // if all good generate a new id and create a new key with the new registration info and set a cookie with the ID.
   } else {
     let tempID = generateRandomString(10, alphaNum);
-    users[tempID] = {id: tempID, email: req.body.email, password: req.body.password};
+
+    const password = req.body.password;
+    const hashed_password = bcrypt.hashSync(password, 10);
+    users[tempID] = {id: tempID, email: req.body.email, password: hashed_password, shorturls: []};
     res.cookie("user_id", tempID);
     res.redirect("/urls");
   }
