@@ -8,17 +8,25 @@
 
 <body>
 <% include partials/_header %>
-<ul>
-<% Object.keys(urls).forEach(function(url) { %>
-  <li>
-  <%= url %> --> <a href="<%= urls[url] %>" target="_new"><%= urls[url] %></a>
-  <a href="/urls/<%= url %>">Edit</a>
-  <form method="POST" action="/urls/<%= url %>/delete">
-    <button type="submit">Delete</button>
-  </form>
-  </li>
-<% }); %>
-</ul>
+
+<% if (user_id === undefined) { %>
+  <h4>Please login or register to see your shortened URLs.</h4>
+<% } else { %>
+
+  <ul>
+  <% user_id.shorturls.forEach(function(urlid) { %>
+    <li>
+    <%= urlid %> --> <a href="<%= urls[urlid] %>" target="_new"><%= urls[urlid] %></a>
+    <a href="/urls/<%= urlid %>">Edit</a>
+    <form method="POST" action="/urls/<%= urlid %>/delete">
+      <button type="submit">Delete</button>
+    </form>
+    </li>
+  <% }); %>
+  </ul>
+<% } %>
+
+
 
 </body>
 
