@@ -1,7 +1,7 @@
 
 
 const express = require('express');
-const cookieParser = require('cookie-parser')
+const cookieSession = require('cookie-session')
 const bodyParser = require("body-parser");
 const bcrypt = require('bcrypt');
 
@@ -9,7 +9,10 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 
 app.use(bodyParser.urlencoded({extended: true}));
-app.use(cookieParser());
+app.use(cookieSession({
+  name: 'session',
+  keys: ["supercalifragilisticoespialidoso","madagascar","constantinopla"]
+}));
 
 // Using EJS as a template engine
 app.set("view engine", "ejs");
@@ -103,7 +106,7 @@ app.get("/users.json", (req, res) => {
 // Render the template to create a new URL
 app.get("/urls/new", (req, res) => {
   // Read the cookie and send the user id object to the _header
-  let user_id = req.cookies["user_id"];
+  let user_id = req.session.user_id;
   if (user_id === undefined) {
     res.redirect("/login");
   } else {
@@ -117,7 +120,7 @@ app.get("/urls/new", (req, res) => {
 // Renders the index
 app.get("/urls", (req, res) => {
   // Read the cookie and send the user id object to the _header
-  let user_id = req.cookies["user_id"];
+  let user_id = req.session.user_id;
   let templateVars = {
     urls: urlDatabase,
     user_id: users[user_id]
@@ -130,13 +133,13 @@ app.get("/urls", (req, res) => {
 app.post("/urls", (req, res) => {
   let tempShort = generateRandomString(6, alphaNum);
   urlDatabase[tempShort] = req.body.longURL;
-  users[req.cookies["user_id"]].shorturls.push(tempShort);
+  users[req.session.user_id].shorturls.push(tempShort);
   res.redirect(`/urls/${tempShort}`);
 });
 
 // Receives the request to delete a URL. Deletes the key and redirects to home.
 app.post("/urls/:id/delete", (req, res) => {
-  let user_id = req.cookies["user_id"];
+  let user_id = req.session.user_id;
   // Find the index of the element in the array of shorturls that belong to the user.
   let index = users[user_id].shorturls.findIndex(e => e === req.params.id);
 
@@ -159,7 +162,7 @@ app.get("/u/:shortURL", (req, res) => {
 
 // Displays the info and update page of a given URL's key.
 app.get("/urls/:id", (req, res) => {
-  let user_id = req.cookies["user_id"];
+  let user_id = req.session.user_id;
   let templateVars = {
     shortURL: req.params.id,
     urls: urlDatabase,
@@ -170,7 +173,7 @@ app.get("/urls/:id", (req, res) => {
 
 // Receives the request to update an existing URL, inserts the update and redirects to home.
 app.post("/urls/:id", (req, res) => {
-  let user_id = req.cookies["user_id"];
+  let user_id = req.session.user_id;
   if (user_id === undefined) {
     res.redirect("/urls");
   } else {
@@ -192,19 +195,14 @@ app.post("/login", (req, res) => {
   let reqPassword = req.body.password;
   let reqEmail = req.body.email;
   // Get the user id cookie
-  let setCookie = req.cookies["user_id"];
+  let setCookie = req.session.user_id;
   // validate password and email
   if (emailExists(users, reqEmail) && validEmailPassword(users, reqEmail, reqPassword)) {
       // Password and email exist but there's no cookie.
       // Get the userID as it is in the datasource and use it to set the cookie value.
-      if (Object.keys(req.cookies).length === 0 || setCookie === 'undefined' ) {
-        res.cookie("user_id", getUserID(users, reqEmail, reqPassword));
+        req.session.user_id = getUserID(users, reqEmail, reqPassword);
         res.redirect("/urls");
-      // Otherwise cookie is fine just redirect.
-      } else {
-        res.cookie("user_id", getUserID(users, reqEmail, reqPassword));
-        res.redirect("/urls");
-      }
+
     } else {
       res.sendStatus(403);
     }
@@ -217,7 +215,7 @@ app.get("/login", (req, res) => {
 
 // Receives the request to delete the userrname cookie, deletes and reirects to home.
 app.get("/logout", (req, res) => {
-  res.clearCookie("user_id");
+  req.session = null;
   res.redirect("/urls");
 });
 
@@ -246,7 +244,7 @@ app.post("/register", (req, res) => {
     const password = req.body.password;
     const hashed_password = bcrypt.hashSync(password, 10);
     users[tempID] = {id: tempID, email: req.body.email, password: hashed_password, shorturls: []};
-    res.cookie("user_id", tempID);
+    req.session.user_id = tempID;
     res.redirect("/urls");
   }
 

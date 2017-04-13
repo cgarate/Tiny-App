@@ -16,7 +16,7 @@
   <ul>
   <% user_id.shorturls.forEach(function(urlid) { %>
     <li>
-    <%= urlid %> --> <a href="<%= urls[urlid] %>" target="_new"><%= urls[urlid] %></a>
+    <%= urlid %> --> <a href="u/<%= urlid %>" target="_new"><%= urls[urlid] %></a>
     <a href="/urls/<%= urlid %>">Edit</a>
     <form method="POST" action="/urls/<%= urlid %>/delete">
       <button type="submit">Delete</button>
