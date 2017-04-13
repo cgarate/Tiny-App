@@ -83,10 +83,15 @@ app.get("/users.json", (req, res) => {
 app.get("/urls/new", (req, res) => {
   // Read the cookie and send the user id object to the _header
   let user_id = req.cookies["user_id"];
-  let templateVars = {
+
+  if (user_id === undefined) {
+    res.redirect("/login");
+  } else {
+    let templateVars = {
     user_id: users[user_id]
      };
-  res.render("urls_new", templateVars);
+    res.render("urls_new", templateVars);
+  }
 });
 
 // Renders the index
