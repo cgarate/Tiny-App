@@ -10,8 +10,6 @@ const PORT = process.env.PORT || 8080;
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 
-const user_id = req.cookies["user_id"];
-
 // Using EJS as a template engine
 app.set("view engine", "ejs");
 
@@ -90,12 +88,12 @@ app.get("/", (req, res) => {
   res.redirect("/urls");
 })
 
-// Serve up a JSON file of our data.
+// Serve up a JSON file of our urls data.
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
-// Serve up a JSON file of our data.
+// Serve up a JSON file of our users data.
 app.get("/users.json", (req, res) => {
   res.json(users);
 });
@@ -103,6 +101,7 @@ app.get("/users.json", (req, res) => {
 // Render the template to create a new URL
 app.get("/urls/new", (req, res) => {
   // Read the cookie and send the user id object to the _header
+  let user_id = req.cookies["user_id"];
   if (user_id === undefined) {
     res.redirect("/login");
   } else {
@@ -116,7 +115,7 @@ app.get("/urls/new", (req, res) => {
 // Renders the index
 app.get("/urls", (req, res) => {
   // Read the cookie and send the user id object to the _header
-
+  let user_id = req.cookies["user_id"];
   let templateVars = {
     urls: urlDatabase,
     user_id: users[user_id]
@@ -134,6 +133,7 @@ app.post("/urls", (req, res) => {
 
 // Receives the request to delete a URL. Deletes the key and redirects to home.
 app.post("/urls/:id/delete", (req, res) => {
+  let user_id = req.cookies["user_id"];
   if (users[user_id].shorturl === req.params.id) {
     delete urlDatabase[req.params.id];
     res.redirect("/urls");
@@ -151,6 +151,7 @@ app.get("/u/:shortURL", (req, res) => {
 
 // Displays the info and update page of a given URL's key.
 app.get("/urls/:id", (req, res) => {
+  let user_id = req.cookies["user_id"];
   let templateVars = {
     shortURL: req.params.id,
     urls: urlDatabase,
@@ -161,12 +162,18 @@ app.get("/urls/:id", (req, res) => {
 
 // Receives the request to update an existing URL, inserts the update and redirects to home.
 app.post("/urls/:id", (req, res) => {
-  if (users[user_id].shorturl === req.params.id) {
-    urlDatabase[req.params.id] = req.body.longURL;
+  let user_id = req.cookies["user_id"];
+  if (user_id === undefined) {
     res.redirect("/urls");
   } else {
-    res.sendStatus(403);
+    if (users[user_id].shorturl === req.params.id) {
+      urlDatabase[req.params.id] = req.body.longURL;
+      res.redirect("/urls");
+    } else {
+      res.sendStatus(403);
+    }
   }
+
 });
 
 // Receives the request to login, creates a cookie with the user received and redirects to home.
@@ -175,12 +182,12 @@ app.post("/login", (req, res) => {
   let reqPassword = req.body.password;
   let reqEmail = req.body.email;
   // Get the user id cookie
-  let setCookie = user_id;
+  let setCookie = req.cookies["user_id"];
   // validate password and email
   if (emailExists(users, reqEmail) && validEmailPassword(users, reqEmail, reqPassword)) {
       // Password and email exist but there's no cookie.
       // Get the userID as it is in the datasource and use it to set the cookie value.
-      if (Object.keys(req.cookies).length === 0 || user_id === 'undefined' ) {
+      if (Object.keys(req.cookies).length === 0 || setCookie === 'undefined' ) {
         res.cookie("user_id", getUserID(users, reqEmail, reqPassword));
         res.redirect("/urls");
       // Otherwise cookie is fine just redirect.
