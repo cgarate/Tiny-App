@@ -23,7 +23,7 @@ const users = {
   "userRandomID": {
     id: "userRandomID",
     email: "user@example.com",
-    password: "purple-monkey-dinosaur",
+    password: "123",
     urls: ["9sm5xK"]
   },
  "user2RandomID": {
@@ -64,6 +64,16 @@ function validEmailPassword(o, email, password) {
     }
   }
   return false;
+};
+
+function getUserID(o, email, password) {
+  let arrayOfUserIDs = Object.keys(o);
+  for (let item of arrayOfUserIDs) {
+    if (o[item].email === email && o[item].password === password) {
+      return o[item].id;
+    }
+  }
+  return null;
 };
 
 // Redirect / to URLs
@@ -146,12 +156,22 @@ app.post("/urls/:id", (req, res) => {
 
 // Receives the request to login, creates a cookie with the user received and redirects to home.
 app.post("/login", (req, res) => {
+  // Get password and email from the request body object.
   let reqPassword = req.body.password;
   let reqEmail = req.body.email;
+  // Get the user id cookie
   let setCookie = req.cookies["user_id"];
+  // validate password and email
   if (emailExists(users, reqEmail) && validEmailPassword(users, reqEmail, reqPassword)) {
-      res.cookie("user_id", setCookie);
-      res.redirect("/urls");
+      // Password and email exist but there's no cookie.
+      // Get the userID as it is in the datasource and use it to set the cookie value.
+      if (Object.keys(req.cookies).length === 0 || req.cookies["user_id"] === 'undefined' ) {
+        res.cookie("user_id", getUserID(users, reqEmail, reqPassword));
+        res.redirect("/urls");
+      // Otherwise cookie is fine just redirect.
+      } else {
+        res.redirect("/urls");
+      }
     } else {
       res.sendStatus(403);
     }
