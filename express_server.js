@@ -43,11 +43,26 @@ function generateRandomString(length, chars) {
 function getEmailList(o) {
   let arrayOfUserIDs = Object.keys(o);
   let resArray = [];
-  for (let id of arrayOfUserIDs) {
-    resArray.push(o[id].email);
+  for (let item of arrayOfUserIDs) {
+    resArray.push(o[item].email);
   }
   return resArray;
-}
+};
+
+function emailExists(o, email) {
+  let result = getEmailList(o).some((e) => {return e === email});
+  return result;
+};
+
+function validEmailPassword(o, email, password) {
+  let arrayOfUserIDs = Object.keys(o);
+  for (let item of arrayOfUserIDs) {
+    if (o[item].email === email && o[item].password === password) {
+      return true;
+    }
+  }
+  return false;
+};
 
 // Redirect / to URLs
 app.get("/", (req, res) => {
@@ -61,19 +76,22 @@ app.get("/urls.json", (req, res) => {
 
 // Render the template to create a new URL
 app.get("/urls/new", (req, res) => {
+  // Read the cookie and send the user id object to the _header
+  let user_id = req.cookies["user_id"];
   let templateVars = {
-    username: req.cookies["username"]
-  };
+    user_id: users[user_id]
+     };
   res.render("urls_new", templateVars);
 });
 
 // Renders the index
 app.get("/urls", (req, res) => {
+  // Read the cookie and send the user id object to the _header
+  let user_id = req.cookies["user_id"];
   let templateVars = {
     urls: urlDatabase,
-    username: req.cookies["username"]
-     }
-
+    user_id: users[user_id]
+     };
   res.render("urls_index", templateVars);
 });
 
@@ -99,10 +117,11 @@ app.get("/u/:shortURL", (req, res) => {
 
 // Displays the info and update page of a given URL's key.
 app.get("/urls/:id", (req, res) => {
+  let user_id = req.cookies["user_id"];
   let templateVars = {
     shortURL: req.params.id,
     urls: urlDatabase,
-    username: req.cookies["username"]
+    user_id: users[user_id]
   };
   res.render("urls_show", templateVars);
 });
@@ -113,15 +132,27 @@ app.post("/urls/:id", (req, res) => {
   res.redirect("/urls");
 });
 
-// Receives the request to login, creates a cookie with the username received and redirects to home.
+// Receives the request to login, creates a cookie with the user received and redirects to home.
 app.post("/login", (req, res) => {
-  res.cookie("username", req.body.username);
-  res.redirect("/urls")
+  let reqPassword = req.body.password;
+  let reqEmail = req.body.email;
+  let setCookie = req.cookies["user_id"];
+  if (emailExists(users, reqEmail) && validEmailPassword(users, reqEmail, reqPassword)) {
+      res.cookie("user_id", setCookie);
+      res.redirect("/urls");
+    } else {
+      res.sendStatus(403);
+    }
+  });
+
+// Receives the request to login, creates a cookie with the user received and redirects to home.
+app.get("/login", (req, res) => {
+  res.render("urls_login");
 });
 
 // Receives the request to delete the userrname cookie, deletes and reirects to home.
 app.post("/logout", (req, res) => {
-  res.clearCookie("username");
+  res.clearCookie("user_id");
   res.redirect("/urls");
 });
 
@@ -134,14 +165,14 @@ app.get("/register", (req, res) => {
 app.post("/register", (req, res) => {
   // get an array of all the emails in the users object.
   // Use some to check if any of them matches the one sent by the user wanting to register.
-  let emailExists = getEmailList(users).some((e) => {return e === req.body.email});
+  let checkEmail = emailExists(users, req.body.email);
 
   // Don't allow empty email or password to come in.
   if (req.body.email === "" || req.body.password === "") {
     // Bad request!
     res.sendStatus(400);
   // Send Bad Request if the email exists already.
-  } else if (emailExists) {
+  } else if (checkEmail) {
     res.sendStatus(400);
   // if all good generate a new id and create a new key with the new registration info and set a cookie with the ID.
   } else {
@@ -156,6 +187,3 @@ app.post("/register", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
-
-
-
