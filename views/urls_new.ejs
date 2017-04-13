@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head></head>
-  <body style="font-size:20px; padding:5px;">
+  <head>
+    <% include partials/_bootstrapStyles %>
+  </head>
+  <body>
     <% include partials/_header %>
-    <form action="/urls" method="POST" style="margin:10px;">
+    <form action="/urls" method="POST">
       <label for="longURL">Enter a URL:</label>
-      <input id="longURL" type="text" name="longURL" value="http://" style="width: 300px">
+      <input id="longURL" type="text" name="longURL" value="http://">
       <input type="submit" value="Submit">
     </form>
   </body>

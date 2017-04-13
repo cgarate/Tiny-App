@@ -2,14 +2,17 @@
 <h1><a href="/urls">Tiny App</a></h1>
 
 <% if (user_id === undefined) { %>
-  <p><a href="/register">Register</a></p>
+  <p>
+    <ul class="nav nav-pills">
+      <li><a href="/register">Register</a></li>
+    </ul>
+  </p>
 <% } else { %>
   <p>
-    <a href="/login">Login</a> /
-    <form action="/logout" method="POST">
-      <button type="submit">Logout</button>
-    </form>
+    <ul class="nav nav-pills">
+      <li><a href="/login">Login</a></li>
+      <li><a href="/logout">Logout</a></li>
+    </ul>
   </p>
-  <p>
 <% } %>
 

@@ -74,6 +74,11 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
+// Serve up a JSON file of our data.
+app.get("/users.json", (req, res) => {
+  res.json(users);
+});
+
 // Render the template to create a new URL
 app.get("/urls/new", (req, res) => {
   // Read the cookie and send the user id object to the _header
@@ -151,7 +156,7 @@ app.get("/login", (req, res) => {
 });
 
 // Receives the request to delete the userrname cookie, deletes and reirects to home.
-app.post("/logout", (req, res) => {
+app.get("/logout", (req, res) => {
   res.clearCookie("user_id");
   res.redirect("/urls");
 });
