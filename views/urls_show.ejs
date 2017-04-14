@@ -6,17 +6,31 @@
 </head>
 
 <body>
+<div class="container">
 <% include partials/_header %>
-<ul>
-  <li>Short URL: <%= shortURL %>
-    <form action="/urls/<%= shortURL %>" method="POST">
-      <label for="longURL">Type any updates to the URL:</label>
-      <input type="text" name="longURL" value="<%= urls[shortURL] %>" style="width: 300px">
-      <button type="submit">Update</button>
-    </form>
-  </li>
-</ul>
 
+  <div class="panel panel-primary">
+    <div class="panel-body">
+
+    </div>
+    <form class="form-horizontal" action="/urls/<%= shortURL %>" method="POST">
+      <div class="form-group">
+        <label class="col-sm-3 control-label" for="longURL">Modify and submit</label>
+        <div class="col-sm-3">
+          <input class="form-control"  type="text" name="longURL" value="<%= urls[shortURL] %>" >
+        </div>
+        <div class="col-sm-3">
+          <button class="btn btn-success" type="submit">Update</button>
+        </div>
+      </div>
+      <div class="form-group">
+
+      </div>
+
+    </form>
+  </div>
+
+</div>
 </body>
 
 </html

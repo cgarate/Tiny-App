@@ -28,18 +28,21 @@ const urlDatabase = {
 const users = {
   "GxCvqkBqjb": {
     "id": "GxCvqkBqjb",
+    "name": "Carlos",
     "email": "cgarate@yahoo.com",
     "password": "$2a$10$wIKnpO0g24PpSHLpkKN04eQsY1exMqZ64Tz.E6x35MI5KuA5tfiSi",
     "shorturls": ["b2xVn2","9sm5xK"]
   },
   "uzkdmiPXse": {
     "id": "uzkdmiPXse",
+    "name": "Carlos",
     "email": "carlos.m.garate@gmail.com",
     "password": "$2a$10$fmIWP1ik263MiUv2D0lMku66VWP/1cPL7jL78wBLBmL7ASU/bDiSO",
     "shorturls": ["c1tI2c","8e3tv1"]
   },
   "iYy4FTIhWe": {
     "id": "iYy4FTIhWe",
+    "name": "Tamar",
     "email": "tamarilana@gmail.com",
     "password": "$2a$10$/03iiHJRNgKAxf7FaHFz/uh69zxpV9/yxl.UkgkPF.C/p9HkIEcXG",
     "shorturls": ["4ttQiE"]
@@ -243,7 +246,7 @@ app.post("/register", (req, res) => {
 
     const password = req.body.password;
     const hashed_password = bcrypt.hashSync(password, 10);
-    users[tempID] = {id: tempID, email: req.body.email, password: hashed_password, shorturls: []};
+    users[tempID] = {id: tempID, name: req.body.name, email: req.body.email, password: hashed_password, shorturls: []};
     req.session.user_id = tempID;
     res.redirect("/urls");
   }

@@ -3,30 +3,40 @@
 <html lang="en">
 <head>
   <% include partials/_bootstrapStyles %>
-  <title>Tiny App</title>
+  <title>Shrink It!</title>
 </head>
 
-<body>
+<body >
+<div class="container">
 <% include partials/_header %>
 
 <% if (user_id === undefined) { %>
-  <h4>Please login or register to see your shortened URLs.</h4>
+
 <% } else { %>
 
-  <ul>
-  <% user_id.shorturls.forEach(function(urlid) { %>
-    <li>
-    <%= urlid %> --> <a href="u/<%= urlid %>" target="_new"><%= urls[urlid] %></a>
-    <a href="/urls/<%= urlid %>">Edit</a>
-    <form method="POST" action="/urls/<%= urlid %>/delete">
-      <button type="submit">Delete</button>
-    </form>
-    </li>
-  <% }); %>
-  </ul>
+
+  <div class="panel panel-primary">
+    <div class="panel-body">
+    <h4>Your Collection</h4>
+    </div>
+    <table class="table">
+    <% user_id.shorturls.forEach(function(urlid) { %>
+    <tr>
+      <td><%= urls[urlid] %> </td>
+      <td><a href="u/<%= urlid %>" target="_new">http://<%= urlid %></a></td>
+      <td><a href="/urls/<%= urlid %>" role="button">Edit</a></td>
+      <td>
+        <form method="POST" action="/urls/<%= urlid %>/delete">
+          <button type="submit" class="btn btn-danger">Delete</button>
+        </form>
+      </td>
+    </tr>
+    <% }); %>
+  </table>
+  </div>
+
 <% } %>
-
-
+</div>
 
 </body>
 

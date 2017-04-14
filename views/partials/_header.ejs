@@ -1,19 +1,31 @@
 
-<h1><a href="/urls">Tiny App</a></h1>
-
 <% if (user_id === undefined) { %>
-  <p>
-    <ul class="nav nav-pills">
-      <li><a href="/register">Register</a></li>
-      <li><a href="/login">Login</a></li>
-    </ul>
-  </p>
+
+
+  <nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <ul class="nav navbar-nav navbar-left">
+        <li><a href="/register">Sign up</a></li>
+        <li><a href="/login">Login</a></li>
+      </ul>
+    </div>
+  </nav>
+  <h1 class="page-header"><a href="/">Shrink it!</a> <small>Login or Sign up to see what's in this.</small></h1>
+  <p></p>
+
 <% } else { %>
-  <p>
-    <ul class="nav nav-pills">
-      <li><a href="/logout">Logout</a></li>
-      <li><a href="/urls/new">Shorten a new URL</a></li>
-    </ul>
-  </p>
+
+  <nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <ul class="nav navbar-nav navbar-left">
+        <li><a href="/urls/new">Shorten</a></li>
+        <li><a href="/logout">Logout</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <h1 class="page-header"><a href="/">Shrink it!</a> <small>Welcome back <%= user_id.name %>!</small></h1>
 <% } %>
+
+
 
