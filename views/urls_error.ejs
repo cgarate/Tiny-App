@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <% include partials/_bootstrapStyles %>
+  <title>Shrink It!</title>
+</head>
+<body>
+  <div class="container">
+  <% include partials/_headersimple %>
+  <% if (sc === 403) { %>
+    <div class="alert alert-warning" role="alert">
+      Something went wrong please try <a href="/urls" class="alert-link">again.</a>
+    </div>
+  <% } else if (sc === 400) { %>
+    <div class="alert alert-danger" role="alert">
+      Tsk tsk, I'm sure you just forgot your password. <a href="/urls" class="alert-link">Please try again.</a>
+    </div>
+  <% } else if (sc === 404) { %>
+    <div class="alert alert-info" role="alert">
+      Hmmm I could not find that file here <a href="/urls" class="alert-link">Here, I will point you to the homepage.</a>
+    </div>
+  <% } else { %>
+    <div class="alert alert-info" role="alert">
+      Something got broken; <a href="/urls" class="alert-link">Escape to the homepage!</a>
+    </div>
+  <% } %>
+  </div>
+</body>
+</html>
+
+
+

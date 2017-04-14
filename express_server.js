@@ -4,6 +4,7 @@ const express = require('express');
 const cookieSession = require('cookie-session')
 const bodyParser = require("body-parser");
 const bcrypt = require('bcrypt');
+const methodOverride = require('method-override')
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -14,9 +15,13 @@ app.use(cookieSession({
   keys: ["supercalifragilisticoespialidoso","madagascar","constantinopla"]
 }));
 
+// override with POST having ?_method=DELETE
+app.use(methodOverride('_method'))
+
 // Using EJS as a template engine
 app.set("view engine", "ejs");
 
+// Our data sources for the moment.
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com",
@@ -141,7 +146,7 @@ app.post("/urls", (req, res) => {
 });
 
 // Receives the request to delete a URL. Deletes the key and redirects to home.
-app.post("/urls/:id/delete", (req, res) => {
+app.delete("/urls/:id", (req, res) => {
   let user_id = req.session.user_id;
   // Find the index of the element in the array of shorturls that belong to the user.
   let index = users[user_id].shorturls.findIndex(e => e === req.params.id);
@@ -152,7 +157,8 @@ app.post("/urls/:id/delete", (req, res) => {
     users[user_id].shorturls.splice(index, 1);
     res.redirect("/urls");
   } else {
-    res.sendStatus(403);
+    res.status(403).redirect("/errors/403");
+    //res.sendStatus(403);
   }
 
 });
@@ -175,7 +181,7 @@ app.get("/urls/:id", (req, res) => {
 });
 
 // Receives the request to update an existing URL, inserts the update and redirects to home.
-app.post("/urls/:id", (req, res) => {
+app.put("/urls/:id", (req, res) => {
   let user_id = req.session.user_id;
   if (user_id === undefined) {
     res.redirect("/urls");
@@ -186,7 +192,8 @@ app.post("/urls/:id", (req, res) => {
       urlDatabase[req.params.id] = req.body.longURL;
       res.redirect("/urls");
     } else {
-      res.sendStatus(403);
+      res.status(403).redirect("/errors/403");
+      //res.sendStatus(403);
     }
   }
 
@@ -207,13 +214,21 @@ app.post("/login", (req, res) => {
         res.redirect("/urls");
 
     } else {
-      res.sendStatus(403);
+      res.status(403).redirect("/errors/403");
     }
   });
 
 // Receives the request to login, creates a cookie with the user received and redirects to home.
 app.get("/login", (req, res) => {
   res.render("urls_login");
+});
+
+// Renders an error info page.
+app.get("/errors/:sc", (req, res) => {
+  templateVars = {
+    sc: req.params.sc
+  }
+  res.render("urls_error", templateVars);
 });
 
 // Receives the request to delete the userrname cookie, deletes and reirects to home.
@@ -236,10 +251,12 @@ app.post("/register", (req, res) => {
   // Don't allow empty email or password to come in.
   if (req.body.email === "" || req.body.password === "") {
     // Bad request!
-    res.sendStatus(400);
+    res.status(400).redirect("/errors/400");
+    //res.sendStatus(400);
   // Send Bad Request if the email exists already.
   } else if (checkEmail) {
-    res.sendStatus(400);
+    res.status(400).redirect("/errors/400");
+    //res.sendStatus(400);
   // if all good generate a new id and create a new key with the new registration info and set a cookie with the ID.
   } else {
     let tempID = generateRandomString(10, alphaNum);
