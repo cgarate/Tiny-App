@@ -30,6 +30,30 @@ const urlDatabase = {
   "4ttQiE": "http://tamarilana.com"
 };
 
+const analytics = {
+  "4ttQiE": {
+    visits: 3,
+    uniquevisits: 1,
+    details: [
+      {
+        timestamp: "Fri Apr 14 2017 15:30:24 GMT-0400 (EDT)",
+        visitorID: "iYy4FTIhWe",
+        visitorName: "Tamar"
+      },
+      {
+        timestamp: "Fri Apr 14 2017 12:30:24 GMT-0400 (EDT)",
+        visitorID: "iYy4FTIhWe",
+        visitorName: "Tamar"
+      },
+      {
+        timestamp: "Fri Apr 14 2017 10:30:24 GMT-0400 (EDT)",
+        visitorID: "iYy4FTIhWe",
+        visitorName: "Tamar"
+      }
+    ]
+  }
+};
+
 const users = {
   "GxCvqkBqjb": {
     "id": "GxCvqkBqjb",
@@ -61,6 +85,34 @@ function generateRandomString(length, chars) {
     for (var i = length; i > 0; --i) result += chars[Math.round(Math.random() * (chars.length - 1))];
     return result;
 }
+
+function initAnalytics(id) {
+  if (analytics[id] === undefined) {
+      analytics[id] = {visits: 0, uniquevisits: 0, details: []};
+  }
+  return true;
+}
+
+function insertVisitCount(id, key) {
+  initAnalytics(id);
+  analytics[id][key] += 1;
+}
+
+function insertVisitDetail(id, o) {
+  initAnalytics(id);
+  analytics[id].details.push(o)
+}
+
+function hasUserVisited(userid, urlid) {
+  initAnalytics(urlid);
+  let a = analytics[urlid].details;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i].visitorID === userid) {
+      return true;
+    }
+  }
+  return false;
+};
 
 function getEmailList(o) {
   let arrayOfUserIDs = Object.keys(o);
@@ -104,6 +156,11 @@ app.get("/", (req, res) => {
 // Serve up a JSON file of our urls data.
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
+});
+
+// Serve up a JSON file of our analytics data.
+app.get("/stats.json", (req, res) => {
+  res.json(analytics);
 });
 
 // Serve up a JSON file of our users data.
@@ -165,7 +222,36 @@ app.delete("/urls/:id", (req, res) => {
 
 // Gets a URL given a key and Redirects to the URL.
 app.get("/u/:shortURL", (req, res) => {
+  let user_id = req.session.user_id;
+  let username = "";
+  // If the request comes from a non-authenticated user create a cookie to track visits.
+  if (user_id === undefined) {
+    req.session.user_id = generateRandomString(10, alphaNum);
+    user_id = req.session.user_id;
+    username = "Non-Registered User";
+  }
+
+  if (users[user_id] === undefined) {
+      username = "Non-Registered User";
+  } else {
+      username = users[user_id].name;
+  }
+
   let longURL = urlDatabase[req.params.shortURL];
+
+  // Do this FIRST! Check if user has visited the link, if not add 1 visit to the unique visit counter.
+  if (hasUserVisited(user_id, req.params.shortURL) === false) {
+    insertVisitCount(req.params.shortURL,"uniquevisits");
+  }
+
+  // register this visit after the unique visit.
+  insertVisitCount(req.params.shortURL,"visits");
+
+  // Create timestamp and object for visit detail.
+  let timestamp = new Date();
+  let visitDetails = {timestamp: timestamp.toUTCString(), visitorID: user_id, visitorName: username };
+  insertVisitDetail(req.params.shortURL, visitDetails);
+
   res.redirect(longURL);
 });
 
@@ -175,6 +261,7 @@ app.get("/urls/:id", (req, res) => {
   let templateVars = {
     shortURL: req.params.id,
     urls: urlDatabase,
+    stats: analytics,
     user_id: users[user_id]
   };
   res.render("urls_show", templateVars);
@@ -271,5 +358,5 @@ app.post("/register", (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
+  console.log(`HTTP Server is up and listening on port ${PORT}!`);
 });
