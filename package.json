@@ -1,8 +1,8 @@
 {
-  "name": "expresswebserver",
+  "name": "shrinkit",
   "version": "1.0.0",
-  "description": "A quick exercise with Express to create a web server.",
-  "main": "index.js",
+  "description": "An http application that shrinks URLs.",
+  "main": "express_server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -20,11 +20,11 @@
   "devDependencies": {},
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/cgarate/expresswebserver.git"
+    "url": "git+https://github.com/cgarate/Shrink-It.git"
   },
   "keywords": [],
   "bugs": {
-    "url": "https://github.com/cgarate/expresswebserver/issues"
+    "url": "https://github.com/cgarate/Shrink-It/issues"
   },
-  "homepage": "https://github.com/cgarate/expresswebserver#readme"
+  "homepage": "https://github.com/cgarate/Shrink-It#readme"
 }
