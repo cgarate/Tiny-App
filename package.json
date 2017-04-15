@@ -2,7 +2,7 @@
   "name": "shrinkit",
   "version": "1.0.0",
   "description": "An http application that shrinks URLs.",
-  "main": "express_server.js",
+  "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
