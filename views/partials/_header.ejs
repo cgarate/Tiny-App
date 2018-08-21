@@ -1,7 +1,7 @@
 
-<% if (user_id === undefined) { %>
+<% if (!user_id) { %>
 
-
+  <span><%= user_id %></span>
   <nav class="navbar navbar-default navbar-fixed-top">
     <div class="container">
       <ul class="nav navbar-nav navbar-left">
@@ -10,15 +10,15 @@
       </ul>
     </div>
   </nav>
-  <h1 class="page-header"><a href="/">Shrink it!</a> <small>Login or Sign up to see what is in this.</small></h1>
-  <p></p>
+  <h1 class="page-header"><a href="/">Shrink it!</a> <small>Login or Sign up to see what's this about.</small></h1>
 
 <% } else { %>
 
   <nav class="navbar navbar-default navbar-fixed-top">
     <div class="container">
       <ul class="nav navbar-nav navbar-left">
-        <li><a href="/urls/new">Shorten</a></li>
+        <li><a href="/urls">Home</a></li>
+        <li><a href="/urls/new">New URL</a></li>
         <li><a href="/logout">Logout</a></li>
       </ul>
     </div>

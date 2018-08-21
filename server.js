@@ -6,13 +6,18 @@ const bodyParser = require("body-parser");
 const bcrypt = require('bcrypt');
 const methodOverride = require('method-override')
 
+require("dotenv").config();
+
 const app = express();
 const PORT = process.env.PORT || 8080;
+const cookieKey1 = process.env.COOKIE_KEY_1;
+const cookieKey2 = process.env.COOKIE_KEY_2;
+const cookieKey3 = process.env.COOKIE_KEY_3;
 
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieSession({
   name: 'session',
-  keys: ["supercalifragilisticoespialidoso","madagascar","constantinopla"]
+  keys: [cookieKey1,cookieKey2,cookieKey3]
 }));
 
 // override with POST having ?_method=DELETE
@@ -38,17 +43,17 @@ const analytics = {
       {
         timestamp: "Fri Apr 14 2017 15:30:24 GMT-0400 (EDT)",
         visitorID: "iYy4FTIhWe",
-        visitorName: "Tamar"
+        visitorName: "User 1"
       },
       {
         timestamp: "Fri Apr 14 2017 12:30:24 GMT-0400 (EDT)",
         visitorID: "iYy4FTIhWe",
-        visitorName: "Tamar"
+        visitorName: "User 1"
       },
       {
         timestamp: "Fri Apr 14 2017 10:30:24 GMT-0400 (EDT)",
         visitorID: "iYy4FTIhWe",
-        visitorName: "Tamar"
+        visitorName: "User 1"
       }
     ]
   }
@@ -57,25 +62,11 @@ const analytics = {
 const users = {
   "GxCvqkBqjb": {
     "id": "GxCvqkBqjb",
-    "name": "Carlos",
-    "email": "cgarate@yahoo.com",
-    "password": "$2a$10$wIKnpO0g24PpSHLpkKN04eQsY1exMqZ64Tz.E6x35MI5KuA5tfiSi",
+    "name": "User",
+    "email": "user@example.com",
+    "password": "",
     "shorturls": ["b2xVn2","9sm5xK"]
   },
-  "uzkdmiPXse": {
-    "id": "uzkdmiPXse",
-    "name": "Carlos",
-    "email": "carlos.m.garate@gmail.com",
-    "password": "$2a$10$fmIWP1ik263MiUv2D0lMku66VWP/1cPL7jL78wBLBmL7ASU/bDiSO",
-    "shorturls": ["c1tI2c","8e3tv1"]
-  },
-  "iYy4FTIhWe": {
-    "id": "iYy4FTIhWe",
-    "name": "Tamar",
-    "email": "tamarilana@gmail.com",
-    "password": "$2a$10$/03iiHJRNgKAxf7FaHFz/uh69zxpV9/yxl.UkgkPF.C/p9HkIEcXG",
-    "shorturls": ["4ttQiE"]
-  }
 }
 
 const alphaNum = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -186,11 +177,15 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls", (req, res) => {
   // Read the cookie and send the user id object to the _header
   let user_id = req.session.user_id;
-  let templateVars = {
-    urls: urlDatabase,
-    user_id: users[user_id]
-     };
-  res.render("urls_index", templateVars);
+  if (!user_id) {
+    res.redirect("/login");
+  } else {
+    let templateVars = {
+      urls: urlDatabase,
+      user_id: users[user_id]
+      };
+    res.render("urls_index", templateVars);
+  }
 });
 
 // Inserts a new URL in our object.
@@ -199,7 +194,7 @@ app.post("/urls", (req, res) => {
   let tempShort = generateRandomString(6, alphaNum);
   urlDatabase[tempShort] = req.body.longURL;
   users[req.session.user_id].shorturls.push(tempShort);
-  res.redirect(`/urls/${tempShort}`);
+  res.redirect(`/urls/`);
 });
 
 // Receives the request to delete a URL. Deletes the key and redirects to home.
@@ -249,7 +244,7 @@ app.get("/u/:shortURL", (req, res) => {
 
   // Create timestamp and object for visit detail.
   let timestamp = new Date();
-  let visitDetails = {timestamp: timestamp.toUTCString(), visitorID: user_id, visitorName: username };
+  let visitDetails = { timestamp: timestamp.toUTCString(), visitorID: user_id, visitorName: username };
   insertVisitDetail(req.params.shortURL, visitDetails);
 
   res.redirect(longURL);
@@ -258,13 +253,18 @@ app.get("/u/:shortURL", (req, res) => {
 // Displays the info and update page of a given URL's key.
 app.get("/urls/:id", (req, res) => {
   let user_id = req.session.user_id;
-  let templateVars = {
-    shortURL: req.params.id,
-    urls: urlDatabase,
-    stats: analytics,
-    user_id: users[user_id]
-  };
-  res.render("urls_show", templateVars);
+  if (!user_id) {
+    res.redirect("/");
+  }
+  else {
+    let templateVars = {
+      shortURL: req.params.id,
+      urls: urlDatabase,
+      stats: analytics,
+      user_id: users[user_id]
+    };
+    res.render("urls_show", templateVars);
+  }
 });
 
 // Receives the request to update an existing URL, inserts the update and redirects to home.
@@ -307,7 +307,11 @@ app.post("/login", (req, res) => {
 
 // Receives the request to login, creates a cookie with the user received and redirects to home.
 app.get("/login", (req, res) => {
-  res.render("urls_login");
+  let user_id = req.session.user_id;
+  let templateVars = {
+      user_id
+    };
+  res.render("urls_login", templateVars);
 });
 
 // Renders an error info page.
@@ -315,10 +319,11 @@ app.get("/errors/:sc", (req, res) => {
   templateVars = {
     sc: req.params.sc
   }
+  console.log(templateVars);
   res.render("urls_error", templateVars);
 });
 
-// Receives the request to delete the userrname cookie, deletes and reirects to home.
+// Receives the request to delete the username cookie, deletes and redirects to home.
 app.get("/logout", (req, res) => {
   req.session = null;
   res.redirect("/urls");
@@ -326,7 +331,11 @@ app.get("/logout", (req, res) => {
 
 // Creates a register endpoint.
 app.get("/register", (req, res) => {
-  res.render("urls_register");
+  let user_id = req.session.user_id;
+  let templateVars = {
+      user_id
+    };
+  res.render("urls_register", templateVars);
 });
 
 // Inserts a new user

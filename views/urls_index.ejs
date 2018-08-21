@@ -10,20 +10,18 @@
 <div class="container">
 <% include partials/_header %>
 
-<% if (user_id === undefined) { %>
+<% if (!user_id) { %>
 
 <% } else { %>
-
-
   <div class="panel panel-primary">
     <div class="panel-body">
     <h4>Your Collection</h4>
     </div>
-    <table class="table">
+    <table class="table"> 
     <% user_id.shorturls.forEach(function(urlid) { %>
     <tr>
       <td><%= urls[urlid] %> </td>
-      <td><a href="u/<%= urlid %>" target="_new">http://<%= urlid %></a></td>
+      <td><a href="/u/<%= urlid %>" target="_new">http://<%= urlid %></a></td>
       <td><a href="/urls/<%= urlid %>" role="button">Edit</a></td>
       <td>
         <form method="POST" action="/urls/<%= urlid %>?_method=DELETE">
@@ -34,9 +32,8 @@
     <% }); %>
   </table>
   </div>
-
-<% } %>
 </div>
+<% } %>
 
 </body>
 
