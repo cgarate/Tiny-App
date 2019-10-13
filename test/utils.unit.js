@@ -9,7 +9,7 @@ const {
   hasUserVisited,
   emailExists,
   validEmailPassword,
-  getUserID,
+  getUserObject,
 } = require("../utils");
 
 const testAnalytics = {
@@ -41,7 +41,7 @@ const testUsers = {
   iYy4FTIhWe: {
     id: "iYy4FTIhWe",
     name: "User 1",
-    email: "user@example.com",
+    email: "user1@example.com",
     password: "1234",
     shorturls: ["b2xVn2", "9sm5xK"],
   },
@@ -113,22 +113,31 @@ describe("utils.js", () => {
 
   it("getEmailList() - it should return an array of user's emails", () => {
     const result = getEmailList(testUsers);
-    assert.deepEqual(result, ['user@example.com','user2@example.com'])
+    assert.deepEqual(result, ["user1@example.com", "user2@example.com"]);
   });
 
   it("emailExists() - it should return true", () => {
-    const result = emailExists(testUsers, "user@example.com");
-    assert.isTrue(result)
+    const result = emailExists(testUsers, "user1@example.com");
+    assert.isTrue(result);
   });
 
   it("emailExists() - it should return false", () => {
     const result = emailExists(testUsers, "user4@example.com");
-    assert.isFalse(result)
+    assert.isFalse(result);
   });
 
   it("validEmailPassword() - it should return true", () => {
     const result = validEmailPassword(testUsers, "user1@example.com", "1234");
-    assert.isTrue(result)
+    assert.isTrue(result);
   });
-  
+
+  it("getUserObject() - it should return a userId", () => {
+    const result = getUserObject(testUsers, "user1@example.com");
+    assert.equal(result, testUsers["iYy4FTIhWe"]);
+  });
+
+  it("getUserObject() - it should return undefined", () => {
+    const result = getUserObject({}, "user1@example.com");
+    assert.isUndefined(result);
+  });
 });

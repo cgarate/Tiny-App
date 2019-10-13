@@ -10,7 +10,7 @@ const {
   hasUserVisited,
   emailExists,
   validEmailPassword,
-  getUserID,
+  getUserObject,
   hashPassword,
 } = require("utils");
 
@@ -207,7 +207,7 @@ app.post("/login", (req, res) => {
   ) {
     // Password and email exist but there's no cookie.
     // Get the userID as it is in the datasource and use it to set the cookie value.
-    req.session.user_id = getUserID(state.users, reqEmail, reqPassword);
+    req.session.user_id = getUserObject(state.users, reqEmail).id;
     res.redirect("/urls");
   } else {
     res.status(403).redirect("/errors/403");

@@ -83,25 +83,16 @@ const validEmailPassword = (stateUsers = undefined, email, password) => {
         bcrypt.compareSync(password, userObject.password),
     ).length > 0
   );
-}
+};
 
-function getUserID(o, email, password) {
-  let arrayOfUserIDs = Object.keys(o);
-  for (let item of arrayOfUserIDs) {
-    if (
-      o[item].email === email &&
-      bcrypt.compareSync(password, o[item].password)
-    ) {
-      return o[item].id;
-    }
-  }
-  return null;
-}
+const getUserObject = (stateUsers = {}, email) =>
+  Object.values(stateUsers).find((userObject) => userObject.email === email);
 
 module.exports = {
   emailExists,
   generateRandomString,
   getEmailList,
+  getUserObject,
   hashPassword,
   hasUserVisited,
   insertUniqueVisitCount,
