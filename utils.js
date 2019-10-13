@@ -1,5 +1,8 @@
 const bcrypt = require("bcrypt");
 
+const UNIQUE_VISITS = "uniquevisits";
+const VISITS = "visits";
+
 const hashPassword = (password, saltRounds = 10) => {
   let salt = bcrypt.genSaltSync(saltRounds);
   return bcrypt.hashSync(password, salt);
@@ -12,29 +15,35 @@ const generateRandomString = (length, chars) => {
   return result;
 };
 
-const insertUniqueVisitCount = (urlId, stateURLs = {}) => {
-  return stateURLs[urlId]
+const insertNewURL = (stateURLs, payload) => ({ ...stateURLs, ...payload });
+
+const insertNewURLForUser = (stateUsers, userId, url) => ({
+  ...stateUsers,
+  [userId]: {
+    ...stateUsers[userId],
+    shorturls: [...stateUsers[userId].shorturls, url],
+  },
+});
+
+const insertVisit = (urlId, stateURLs = {}, type) =>
+  stateURLs[urlId]
     ? {
         ...stateURLs,
         [urlId]: {
           ...stateURLs[urlId],
-          uniquevisits: stateURLs[urlId].uniquevisits + 1,
+          [type]: stateURLs[urlId][type] + 1,
         },
       }
     : stateURLs;
-};
 
-const insertVisitCount = (urlId, stateURLs = {}) => {
-  return stateURLs[urlId]
-    ? {
-        ...stateURLs,
-        [urlId]: { ...stateURLs[urlId], visits: stateURLs[urlId].visits + 1 },
-      }
-    : stateURLs;
-};
+const insertUniqueVisitCount = (urlId, stateURLs = {}) =>
+  insertVisit(urlId, stateURLs, UNIQUE_VISITS);
 
-const insertVisitDetail = (urlId, detailPayload = {}, stateURLs = {}) => {
-  return stateURLs[urlId]
+const insertVisitCount = (urlId, stateURLs = {}) =>
+  insertVisit(urlId, stateURLs, VISITS);
+
+const insertVisitDetail = (urlId, detailPayload = {}, stateURLs = {}) =>
+  stateURLs[urlId]
     ? {
         ...stateURLs,
         [urlId]: {
@@ -43,7 +52,6 @@ const insertVisitDetail = (urlId, detailPayload = {}, stateURLs = {}) => {
         },
       }
     : stateURLs;
-};
 
 /**
  *
@@ -61,12 +69,10 @@ const hasUserVisited = (userId, urlId, stateURLs = {}) => {
 };
 
 const getEmailList = (stateUsers) => {
-  let arrayOfUserIDs = Object.keys(stateUsers);
-  let resArray = [];
-  for (let item of arrayOfUserIDs) {
-    resArray.push(stateUsers[item].email);
-  }
-  return resArray;
+  const arrayOfUserObjects = Object.values(stateUsers);
+  return arrayOfUserObjects.reduce((accum, userObject) => {
+    return [...accum, userObject.email];
+  }, []);
 };
 
 const emailExists = (stateUsers, email) =>
@@ -88,13 +94,19 @@ const validEmailPassword = (stateUsers = undefined, email, password) => {
 const getUserObject = (stateUsers = {}, email) =>
   Object.values(stateUsers).find((userObject) => userObject.email === email);
 
+const getArrayIndexOfUrl = (stateUsers, userId, urlId) =>
+  stateUsers[userId].shorturls.findIndex((url) => url === urlId);
+
 module.exports = {
   emailExists,
   generateRandomString,
+  getArrayIndexOfUrl,
   getEmailList,
   getUserObject,
   hashPassword,
   hasUserVisited,
+  insertNewURL,
+  insertNewURLForUser,
   insertUniqueVisitCount,
   insertVisitCount,
   insertVisitDetail,

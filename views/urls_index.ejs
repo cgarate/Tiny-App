@@ -10,7 +10,7 @@
 <div class="container">
 <% include partials/_header %>
 
-<% if (!user_id) { %>
+<% if (!userId) { %>
 
 <% } else { %>
   <div class="panel panel-primary">
@@ -18,7 +18,7 @@
     <h4>Your Collection</h4>
     </div>
     <table class="table"> 
-    <% user_id.shorturls.forEach(function(urlid) { %>
+    <% userId.shorturls.forEach(function(urlid) { %>
     <tr>
       <td><%= urls[urlid] %> </td>
       <td><a href="/u/<%= urlid %>" target="_new">http://<%= urlid %></a></td>

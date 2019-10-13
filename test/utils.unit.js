@@ -3,6 +3,8 @@ const { assert } = require("chai");
 const {
   generateRandomString,
   getEmailList,
+  insertNewURL,
+  insertNewURLForUser,
   insertUniqueVisitCount,
   insertVisitCount,
   insertVisitDetail,
@@ -42,7 +44,7 @@ const testUsers = {
     id: "iYy4FTIhWe",
     name: "User 1",
     email: "user1@example.com",
-    password: "1234",
+    password: "$2b$10$u9jwjwAFHUpXdxv97kHYBOZnF2wf76esNLcU8VhmCgh19aw.tm5d.",
     shorturls: ["b2xVn2", "9sm5xK"],
   },
   apEgcb6KSa: {
@@ -50,8 +52,16 @@ const testUsers = {
     name: "User 2",
     email: "user2@example.com",
     password: "5678",
-    shorturls: ["8d6zX"],
+    shorturls: ["8e3tv1"],
   },
+};
+
+const testURLs = {
+  b2xVn2: "http://www.lighthouselabs.ca",
+  "9sm5xK": "http://www.rangle.io",
+  c1tI2c: "http://www.garatephotography.com",
+  "8e3tv1": "http://www.garateca.com",
+  "4ttQiE": "http://tamarilana.com",
 };
 
 describe("utils.js", () => {
@@ -139,5 +149,26 @@ describe("utils.js", () => {
   it("getUserObject() - it should return undefined", () => {
     const result = getUserObject({}, "user1@example.com");
     assert.isUndefined(result);
+  });
+
+  it("should insert a new URL", () => {
+    const newURL = {
+      Cm7486Aj: "http://example.com",
+    };
+    const result = insertNewURL(testURLs, newURL);
+    assert.deepEqual(result, { ...testURLs, ...newURL });
+  });
+
+  it("should insert a new URL for a given user", () => {
+    const newURL = "Cm7486Aj";
+    const userId = "apEgcb6KSa";
+    const result = insertNewURLForUser(testUsers, userId, newURL);
+    assert.deepEqual(result, {
+      ...testUsers,
+      [userId]: {
+        ...testUsers[userId],
+        shorturls: [...testUsers[userId].shorturls, newURL],
+      },
+    });
   });
 });
