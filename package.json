@@ -4,22 +4,26 @@
   "description": "An http application that shrinks URLs.",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "./node_modules/.bin/nodemon -L server.js",
+    "test": "mocha"
   },
   "author": "Carlos M. Garate",
   "license": "ISC",
   "dependencies": {
-    "bcrypt": "^1.0.2",
-    "body-parser": "^1.17.1",
-    "cookie-parser": "^1.4.3",
-    "cookie-session": "^2.0.0-beta.1",
-    "dotenv": "^6.0.0",
-    "ejs": "^2.5.6",
-    "express": "^4.15.2",
-    "method-override": "^2.3.8",
-    "nodemon": "^1.11.0"
+    "bcrypt": "^3.0.6",
+    "body-parser": "^1.19.0",
+    "cookie-parser": "^1.4.4",
+    "cookie-session": "^2.0.0-beta.3",
+    "dotenv": "^8.1.0",
+    "ejs": "^2.7.1",
+    "express": "^4.17.1",
+    "method-override": "^3.0.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "mocha": "^6.2.1",
+    "nodemon": "^1.19.3"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cgarate/Shrink-It.git"

@@ -7,15 +7,15 @@
 <body>
   <div class="container">
   <% include partials/_headersimple %>
-  <% if (sc === '403') { %>
+  <% if (statusCode === '403') { %>
     <div class="alert alert-warning" role="alert">
       Something went wrong please try <a href="/urls" class="alert-link">again.</a>
     </div>
-  <% } else if (sc === '400') { %>
+  <% } else if (statusCode === '400') { %>
     <div class="alert alert-danger" role="alert">
       Tsk tsk, I am sure you just forgot your password. <a href="/urls" class="alert-link">Please try again.</a>
     </div>
-  <% } else if (sc === '404') { %>
+  <% } else if (statusCode === '404') { %>
     <div class="alert alert-info" role="alert">
       Hmmm I could not find that file here <a href="/urls" class="alert-link">Here, I will point you to the homepage.</a>
     </div>
