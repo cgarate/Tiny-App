@@ -12,6 +12,7 @@ const {
   hasUserVisited,
   insertNewURL,
   insertNewURLForUser,
+  insertUniqueVisitCount,
   insertVisitCount,
   insertVisitDetail,
   validEmailPassword,
@@ -21,9 +22,12 @@ require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 8080;
-const cookieKey1 = process.env.COOKIE_KEY_1;
-const cookieKey2 = process.env.COOKIE_KEY_2;
-const cookieKey3 = process.env.COOKIE_KEY_3;
+const cookieKey1 =
+  process.env.COOKIE_KEY_1 || "SuperCaliFragilisticoEspialidoso2019";
+const cookieKey2 =
+  process.env.COOKIE_KEY_2 ||
+  "ThePathOfTheRighteousManIsBesetByTheInequities.PulpFiction.Quotes";
+const cookieKey3 = process.env.COOKIE_KEY_3 || "apqmzorucg1029387465";
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(
@@ -44,7 +48,7 @@ const ANALYTICS = "analytics";
 const USERS = "users";
 
 // Our data sources for the moment.
-const state = {
+let state = {
   urlDatabase: {},
   analytics: {},
   users: {},
@@ -80,7 +84,7 @@ app.get("/users.json", (req, res) => {
 // Render the template to create a new URL
 app.get("/urls/new", (req, res) => {
   // Read the cookie and send the user id object to the _header
-  let userId = req.session.user_id;
+  let userId = req.session.userId;
   if (!userId) {
     res.redirect("/login");
   } else {
@@ -94,7 +98,7 @@ app.get("/urls/new", (req, res) => {
 // Renders the index
 app.get("/urls", (req, res) => {
   // Read the cookie and send the user id object to the _header
-  let userId = req.session.user_id;
+  let userId = req.session.userId;
   if (!userId) {
     res.redirect("/login");
   } else {
@@ -111,7 +115,7 @@ app.get("/urls", (req, res) => {
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString(6, alphaNum);
   const longURL = req.body.longURL;
-  const userId = req.session.user_id;
+  const userId = req.session.userId;
   const newStateURL = insertNewURL(state[URL_DATABASE], {
     [shortURL]: longURL,
   });
@@ -123,12 +127,12 @@ app.post("/urls", (req, res) => {
 
 // Receives the request to delete a URL. Deletes the key and redirects to home.
 app.delete("/urls/:id", (req, res) => {
-  const userId = req.session.user_id;
+  const userId = req.session.userId;
   const urlId = req.params.id;
   // Find the index of the element in the array of shorturls that belong to the user.
   const shortURLIndex = getArrayIndexOfUrl(state.users, userId, urlId);
 
-  if (shortURLIndex) {
+  if (shortURLIndex > -1) {
     delete state[URL_DATABASE][req.params.id];
     // Remove the URL from the users' array.
     state[USERS][user_id].shorturls.splice(shortURLIndex, 1);
@@ -140,26 +144,23 @@ app.delete("/urls/:id", (req, res) => {
 
 // Gets a URL given a key and Redirects to the URL.
 app.get("/u/:shortURL", (req, res) => {
-  const user_id = req.session.user_id;
-  const username = "";
+  const userId = req.session.userId;
   // If the request comes from a non-authenticated user create a cookie to track visits.
-  if (!user_id) {
-    req.session.user_id = generateRandomString(10, alphaNum);
-    user_id = req.session.user_id;
+  if (!userId) {
+    req.session.userId = generateRandomString(10, alphaNum);
+    userId = req.session.userId;
     username = "Non-Registered User";
   }
 
-  if (!state.users[user_id]) {
-    username = "Non-Registered User";
-  } else {
-    username = state.users[user_id].name;
-  }
+  const username = !state.users[userId]
+    ? "Non-Registered User"
+    : state.users[userId].name;
 
   const longURL = state.urlDatabase[req.params.shortURL];
 
   // Do this FIRST! Check if user has visited the link, if not add 1 visit to the unique visit counter.
   const newStateURL =
-    !hasUserVisited(user_id, req.params.shortURL, state.analytics) &&
+    !hasUserVisited(userId, req.params.shortURL, state.analytics) &&
     insertUniqueVisitCount(req.params.shortURL, state.analytics);
 
   // register this visit after the unique visit.
@@ -169,7 +170,7 @@ app.get("/u/:shortURL", (req, res) => {
   let timestamp = new Date();
   let visitDetails = {
     timestamp: timestamp.toUTCString(),
-    visitorID: user_id,
+    visitorID: userId,
     visitorName: username,
   };
   const newStateAnalytics = insertVisitDetail(
@@ -185,17 +186,15 @@ app.get("/u/:shortURL", (req, res) => {
 
 // Displays the info and update page of a given URL's key.
 app.get("/urls/:id", (req, res) => {
-  const {
-    session: { user_id },
-  } = req;
-  if (!user_id) {
+  const userId = req.session.userId;
+  if (!userId) {
     res.redirect("/");
   } else {
     let templateVars = {
       shortURL: req.params.id,
       urls: state.urlDatabase,
       stats: state.analytics,
-      user_id: users[user_id],
+      userId: state.users[userId],
     };
     res.render("urls_show", templateVars);
   }
@@ -203,14 +202,14 @@ app.get("/urls/:id", (req, res) => {
 
 // Receives the request to update an existing URL, inserts the update and redirects to home.
 app.put("/urls/:id", (req, res) => {
-  const userId = req.session.user_id;
+  const userId = req.session.userId;
   const urlId = req.params.id;
   if (!userId) {
     res.redirect("/urls");
   } else {
     // Find the index of the element in the array of shorturls that belong to the user.
     const shortURLIndex = getArrayIndexOfUrl(state.users, userId, urlId);
-    if (shortURLIndex) {
+    if (shortURLIndex > -1) {
       state.urlDatabase[urlId] = req.body.longURL;
       res.redirect("/urls");
     } else {
@@ -231,7 +230,7 @@ app.post("/login", (req, res) => {
   ) {
     // Password and email exist but there's no cookie yet.
     // Get the userID as it is in the datasource and use it to set the cookie value.
-    req.session.user_id = getUserObject(state.users, reqEmail).id;
+    req.session.userId = getUserObject(state.users, reqEmail).id;
     res.redirect("/urls");
   } else {
     res.status(403).redirect("/errors/403");
@@ -240,7 +239,7 @@ app.post("/login", (req, res) => {
 
 // Receives the request to login, creates a cookie with the user received and redirects to home.
 app.get("/login", (req, res) => {
-  let userId = req.session.user_id;
+  let userId = req.session.userId;
   let templateVars = {
     userId,
   };
@@ -263,7 +262,7 @@ app.get("/logout", (req, res) => {
 
 // Creates a register endpoint.
 app.get("/register", (req, res) => {
-  let userId = req.session.user_id;
+  let userId = req.session.userId;
   let templateVars = {
     userId,
   };
@@ -295,7 +294,7 @@ app.post("/register", (req, res) => {
       password: hashed_password,
       shorturls: [],
     };
-    req.session.user_id = tempID;
+    req.session.userId = tempID;
     res.redirect("/urls");
   }
 });

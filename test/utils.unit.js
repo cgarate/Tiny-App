@@ -2,6 +2,7 @@ const { assert } = require("chai");
 
 const {
   generateRandomString,
+  getArrayIndexOfUrl,
   getEmailList,
   insertNewURL,
   insertNewURLForUser,
@@ -171,4 +172,9 @@ describe("utils.js", () => {
       },
     });
   });
+
+  it("should get the index of the URL in the array", () => {
+    const result = getArrayIndexOfUrl(testUsers, "iYy4FTIhWe", "9sm5xK")
+    assert.equal(result, 1)
+  })
 });
