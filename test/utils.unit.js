@@ -40,14 +40,14 @@ const testDetail = {
 };
 
 const testUsers = {
-  iYy4FTIhWe: {
+  "iYy4FTIhWe": {
     id: "iYy4FTIhWe",
     name: "User 1",
     email: "user1@example.com",
     password: "$2b$10$u9jwjwAFHUpXdxv97kHYBOZnF2wf76esNLcU8VhmCgh19aw.tm5d.",
     shorturls: ["b2xVn2", "9sm5xK"],
   },
-  apEgcb6KSa: {
+  "apEgcb6KSa": {
     id: "apEgcb6KSa",
     name: "User 2",
     email: "user2@example.com",
@@ -57,11 +57,11 @@ const testUsers = {
 };
 
 const testURLs = {
-  b2xVn2: "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.rangle.io",
-  c1tI2c: "http://www.garatephotography.com",
-  "8e3tv1": "http://www.garateca.com",
-  "4ttQiE": "http://tamarilana.com",
+  "b2xVn2": "http://www.example.ca",
+  "9sm5xK": "http://www.example.io",
+  "c1tI2c": "http://www.example.com.mx",
+  "8e3tv1": "http://www.example.com",
+  "4ttQiE": "http://example.co.uk",
 };
 
 describe("utils.js", () => {
