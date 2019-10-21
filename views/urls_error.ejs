@@ -9,7 +9,7 @@
   <% include partials/_headersimple %>
   <% if (statusCode === '403') { %>
     <div class="alert alert-warning" role="alert">
-      Something went wrong please try <a href="/urls" class="alert-link">again.</a>
+      The page requested is not available to you. Click to go <a href="/urls" class="alert-link">home.</a>
     </div>
   <% } else if (statusCode === '400') { %>
     <div class="alert alert-danger" role="alert">

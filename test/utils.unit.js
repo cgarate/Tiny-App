@@ -82,12 +82,6 @@ describe("utils.js", () => {
     assert.deepEqual(expected, result);
   });
 
-  it("insertUniqueVisitCount() - should NOT add a unique visit", () => {
-    const expected = testAnalytics;
-    const result = insertUniqueVisitCount("12345ABC", testAnalytics);
-    assert.deepEqual(expected, result);
-  });
-
   it("insertVisitCount() - should add a visit", () => {
     const expected = {
       ...testAnalytics,
@@ -109,6 +103,17 @@ describe("utils.js", () => {
       },
     };
     const result = insertVisitDetail("4ttQiE", testDetail, testAnalytics);
+    assert.deepEqual(expected, result);
+  });
+
+  it("insertVisitDetail() - should add visit detail for a new URL", () => {
+    const expected = {
+      ...testAnalytics,
+      ["1abc2def"]: {
+        details: [testDetail],
+      },
+    };
+    const result = insertVisitDetail("1abc2def", testDetail, testAnalytics);
     assert.deepEqual(expected, result);
   });
 

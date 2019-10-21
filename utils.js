@@ -25,33 +25,47 @@ const insertNewURLForUser = (stateUsers, userId, url) => ({
   },
 });
 
-const insertVisit = (urlId, stateURLs = {}, type) =>
-  stateURLs[urlId]
+const insertVisit = (urlId, stateAnalytics = {}, type) =>
+  stateAnalytics[urlId]
     ? {
-        ...stateURLs,
+        ...stateAnalytics,
         [urlId]: {
-          ...stateURLs[urlId],
-          [type]: stateURLs[urlId][type] + 1,
+          ...stateAnalytics[urlId],
+          [type]: stateAnalytics[urlId][type]
+            ? stateAnalytics[urlId][type] + 1
+            : 1,
         },
       }
-    : stateURLs;
-
-const insertUniqueVisitCount = (urlId, stateURLs = {}) =>
-  insertVisit(urlId, stateURLs, UNIQUE_VISITS);
-
-const insertVisitCount = (urlId, stateURLs = {}) =>
-  insertVisit(urlId, stateURLs, VISITS);
-
-const insertVisitDetail = (urlId, detailPayload = {}, stateURLs = {}) =>
-  stateURLs[urlId]
-    ? {
-        ...stateURLs,
+    : {
+        ...stateAnalytics,
         [urlId]: {
-          ...stateURLs[urlId],
-          details: [...stateURLs[urlId].details, detailPayload],
+          [type]: 1,
+        },
+      };
+
+const insertUniqueVisitCount = (urlId, stateAnalytics = {}) =>
+  insertVisit(urlId, stateAnalytics, UNIQUE_VISITS);
+
+const insertVisitCount = (urlId, stateAnalytics = {}) =>
+  insertVisit(urlId, stateAnalytics, VISITS);
+
+const insertVisitDetail = (urlId, detailPayload = {}, stateAnalytics = {}) =>
+  stateAnalytics[urlId]
+    ? {
+        ...stateAnalytics,
+        [urlId]: {
+          ...stateAnalytics[urlId],
+          details: stateAnalytics[urlId].details
+            ? [...stateAnalytics[urlId].details, detailPayload]
+            : [detailPayload],
         },
       }
-    : stateURLs;
+    : {
+        ...stateAnalytics,
+        [urlId]: {
+          details: [detailPayload],
+        },
+      };
 
 /**
  *
@@ -61,9 +75,9 @@ const insertVisitDetail = (urlId, detailPayload = {}, stateURLs = {}) =>
  * @description Check if a specific user has visited a given URL
  * @returns boolean
  */
-const hasUserVisited = (userId, urlId, stateURLs = {}) => {
-  const details = stateURLs[urlId] && stateURLs[urlId].details;
-  return stateURLs[urlId]
+const hasUserVisited = (userId, urlId, stateAnalytics = {}) => {
+  const details = stateAnalytics[urlId] && stateAnalytics[urlId].details;
+  return stateAnalytics[urlId]
     ? details.filter((detail) => detail.visitorID === userId).length > 0
     : false;
 };
