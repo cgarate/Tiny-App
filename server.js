@@ -1,174 +1,96 @@
-
-
-const express = require('express');
-const cookieSession = require('cookie-session')
+const express = require("express");
+const cookieSession = require("cookie-session");
 const bodyParser = require("body-parser");
-const bcrypt = require('bcrypt');
-const methodOverride = require('method-override')
+
+const methodOverride = require("method-override");
+const {
+  emailExists,
+  generateRandomString,
+  getArrayIndexOfUrl,
+  getUserObject,
+  hashPassword,
+  hasUserVisited,
+  insertNewURL,
+  insertNewURLForUser,
+  insertUniqueVisitCount,
+  insertVisitCount,
+  insertVisitDetail,
+  validEmailPassword,
+} = require("./utils");
 
 require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 8080;
-const cookieKey1 = process.env.COOKIE_KEY_1;
-const cookieKey2 = process.env.COOKIE_KEY_2;
-const cookieKey3 = process.env.COOKIE_KEY_3;
+const cookieKey1 =
+  process.env.COOKIE_KEY_1 || "SuperCaliFragilisticoEspialidoso2019";
+const cookieKey2 =
+  process.env.COOKIE_KEY_2 ||
+  "ThePathOfTheRighteousManIsBesetByTheInequities.PulpFiction.Quotes";
+const cookieKey3 = process.env.COOKIE_KEY_3 || "apqmzorucg1029387465";
 
-app.use(bodyParser.urlencoded({extended: true}));
-app.use(cookieSession({
-  name: 'session',
-  keys: [cookieKey1,cookieKey2,cookieKey3]
-}));
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(
+  cookieSession({
+    name: "session",
+    keys: [cookieKey1, cookieKey2, cookieKey3],
+  }),
+);
 
 // override with POST having ?_method=DELETE
-app.use(methodOverride('_method'))
+app.use(methodOverride("_method"));
 
 // Using EJS as a template engine
 app.set("view engine", "ejs");
 
+const URL_DATABASE = "urlDatabase";
+const ANALYTICS = "analytics";
+const USERS = "users";
+
 // Our data sources for the moment.
-const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com",
-  "c1tI2c": "http://www.garatephotography.com",
-  "8e3tv1": "http://www.garateca.com",
-  "4ttQiE": "http://tamarilana.com"
+let state = {
+  urlDatabase: {},
+  analytics: {},
+  users: {},
 };
 
-const analytics = {
-  "4ttQiE": {
-    visits: 3,
-    uniquevisits: 1,
-    details: [
-      {
-        timestamp: "Fri Apr 14 2017 15:30:24 GMT-0400 (EDT)",
-        visitorID: "iYy4FTIhWe",
-        visitorName: "User 1"
-      },
-      {
-        timestamp: "Fri Apr 14 2017 12:30:24 GMT-0400 (EDT)",
-        visitorID: "iYy4FTIhWe",
-        visitorName: "User 1"
-      },
-      {
-        timestamp: "Fri Apr 14 2017 10:30:24 GMT-0400 (EDT)",
-        visitorID: "iYy4FTIhWe",
-        visitorName: "User 1"
-      }
-    ]
-  }
+const updateState = (stateSlice, payload) => {
+  state = { ...state, [stateSlice]: { ...payload } };
 };
 
-const users = {
-  "GxCvqkBqjb": {
-    "id": "GxCvqkBqjb",
-    "name": "User",
-    "email": "user@example.com",
-    "password": "",
-    "shorturls": ["b2xVn2","9sm5xK"]
-  },
-}
-
-const alphaNum = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-function generateRandomString(length, chars) {
-    let result = '';
-    for (var i = length; i > 0; --i) result += chars[Math.round(Math.random() * (chars.length - 1))];
-    return result;
-}
-
-function initAnalytics(id) {
-  if (analytics[id] === undefined) {
-      analytics[id] = {visits: 0, uniquevisits: 0, details: []};
-  }
-  return true;
-}
-
-function insertVisitCount(id, key) {
-  initAnalytics(id);
-  analytics[id][key] += 1;
-}
-
-function insertVisitDetail(id, o) {
-  initAnalytics(id);
-  analytics[id].details.push(o)
-}
-
-function hasUserVisited(userid, urlid) {
-  initAnalytics(urlid);
-  let a = analytics[urlid].details;
-  for (let i = 0; i < a.length; i++) {
-    if (a[i].visitorID === userid) {
-      return true;
-    }
-  }
-  return false;
-};
-
-function getEmailList(o) {
-  let arrayOfUserIDs = Object.keys(o);
-  let resArray = [];
-  for (let item of arrayOfUserIDs) {
-    resArray.push(o[item].email);
-  }
-  return resArray;
-};
-
-function emailExists(o, email) {
-  let result = getEmailList(o).some((e) => {return e === email});
-  return result;
-};
-
-function validEmailPassword(o, email, password) {
-  let arrayOfUserIDs = Object.keys(o);
-  for (let item of arrayOfUserIDs) {
-    if (o[item].email === email && bcrypt.compareSync(password, o[item].password)) {
-      return true;
-    }
-  }
-  return false;
-};
-
-function getUserID(o, email, password) {
-  let arrayOfUserIDs = Object.keys(o);
-  for (let item of arrayOfUserIDs) {
-    if (o[item].email === email && bcrypt.compareSync(password, o[item].password)) {
-      return o[item].id;
-    }
-  }
-  return null;
-};
+const alphaNum =
+  "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 // Redirect / to URLs
 app.get("/", (req, res) => {
   res.redirect("/urls");
-})
+});
 
 // Serve up a JSON file of our urls data.
 app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
+  res.json(state[URL_DATABASE]);
 });
 
 // Serve up a JSON file of our analytics data.
 app.get("/stats.json", (req, res) => {
-  res.json(analytics);
+  res.json(state[ANALYTICS]);
 });
 
 // Serve up a JSON file of our users data.
 app.get("/users.json", (req, res) => {
-  res.json(users);
+  res.json(state[USERS]);
 });
 
 // Render the template to create a new URL
 app.get("/urls/new", (req, res) => {
   // Read the cookie and send the user id object to the _header
-  let user_id = req.session.user_id;
-  if (user_id === undefined) {
+  let userId = req.session.userId;
+  if (!userId) {
     res.redirect("/login");
   } else {
-    let templateVars = {
-    user_id: users[user_id]
-     };
+    const templateVars = {
+      userId: state[USERS][userId],
+    };
     res.render("urls_new", templateVars);
   }
 });
@@ -176,14 +98,14 @@ app.get("/urls/new", (req, res) => {
 // Renders the index
 app.get("/urls", (req, res) => {
   // Read the cookie and send the user id object to the _header
-  let user_id = req.session.user_id;
-  if (!user_id) {
+  let userId = req.session.userId;
+  if (!userId) {
     res.redirect("/login");
   } else {
     let templateVars = {
-      urls: urlDatabase,
-      user_id: users[user_id]
-      };
+      urls: state[URL_DATABASE],
+      userId: state[USERS][userId],
+    };
     res.render("urls_index", templateVars);
   }
 });
@@ -191,77 +113,93 @@ app.get("/urls", (req, res) => {
 // Inserts a new URL in our object.
 // Receives the request to create a new URL, creates a random alphanumeric string to be the new key and updates the JS Data Object.
 app.post("/urls", (req, res) => {
-  let tempShort = generateRandomString(6, alphaNum);
-  urlDatabase[tempShort] = req.body.longURL;
-  users[req.session.user_id].shorturls.push(tempShort);
+  const shortURL = generateRandomString(6, alphaNum);
+  const longURL = req.body.longURL;
+  const userId = req.session.userId;
+  const newStateURL = insertNewURL(state[URL_DATABASE], {
+    [shortURL]: longURL,
+  });
+  const newStateUser = insertNewURLForUser(state[USERS], userId, shortURL);
+  updateState(URL_DATABASE, newStateURL);
+  updateState(USERS, newStateUser);
   res.redirect(`/urls/`);
 });
 
 // Receives the request to delete a URL. Deletes the key and redirects to home.
 app.delete("/urls/:id", (req, res) => {
-  let user_id = req.session.user_id;
+  const userId = req.session.userId;
+  const urlId = req.params.id;
   // Find the index of the element in the array of shorturls that belong to the user.
-  let index = users[user_id].shorturls.findIndex(e => e === req.params.id);
+  const shortURLIndex = getArrayIndexOfUrl(state[USERS], userId, urlId);
 
-  if (users[user_id].shorturls[index] === req.params.id) {
-    delete urlDatabase[req.params.id];
+  if (shortURLIndex > -1) {
+    delete state[URL_DATABASE][req.params.id];
     // Remove the URL from the users' array.
-    users[user_id].shorturls.splice(index, 1);
+    state[USERS][userId].shorturls.splice(shortURLIndex, 1);
     res.redirect("/urls");
   } else {
     res.status(403).redirect("/errors/403");
-    //res.sendStatus(403);
   }
-
 });
 
 // Gets a URL given a key and Redirects to the URL.
 app.get("/u/:shortURL", (req, res) => {
-  let user_id = req.session.user_id;
-  let username = "";
   // If the request comes from a non-authenticated user create a cookie to track visits.
-  if (user_id === undefined) {
-    req.session.user_id = generateRandomString(10, alphaNum);
-    user_id = req.session.user_id;
-    username = "Non-Registered User";
-  }
+  req.session.userId = !req.session.userId
+    ? generateRandomString(10, alphaNum)
+    : req.session.userId;
 
-  if (users[user_id] === undefined) {
-      username = "Non-Registered User";
-  } else {
-      username = users[user_id].name;
-  }
+  const username = !state[USERS][req.session.userId]
+    ? "Non-Registered User"
+    : state[USERS][req.session.userId].name;
 
-  let longURL = urlDatabase[req.params.shortURL];
+  const longURL = state[URL_DATABASE][req.params.shortURL];
 
   // Do this FIRST! Check if user has visited the link, if not add 1 visit to the unique visit counter.
-  if (hasUserVisited(user_id, req.params.shortURL) === false) {
-    insertVisitCount(req.params.shortURL,"uniquevisits");
+  const newStateURL =
+    !hasUserVisited(req.session.userId, req.params.shortURL, state[ANALYTICS]) &&
+    insertUniqueVisitCount(req.params.shortURL, state[ANALYTICS]);
+
+  if (newStateURL) {
+    updateState(ANALYTICS, newStateURL);
   }
 
   // register this visit after the unique visit.
-  insertVisitCount(req.params.shortURL,"visits");
+  updateState(
+    ANALYTICS,
+    insertVisitCount(req.params.shortURL, state[ANALYTICS]),
+  );
 
   // Create timestamp and object for visit detail.
   let timestamp = new Date();
-  let visitDetails = { timestamp: timestamp.toUTCString(), visitorID: user_id, visitorName: username };
-  insertVisitDetail(req.params.shortURL, visitDetails);
+  let visitDetails = {
+    timestamp: timestamp.toUTCString(),
+    visitorID: req.session.userId,
+    visitorName: username,
+  };
+  const newStateAnalytics = insertVisitDetail(
+    req.params.shortURL,
+    visitDetails,
+    state[ANALYTICS],
+  );
+  updateState(ANALYTICS, newStateAnalytics);
 
   res.redirect(longURL);
 });
 
 // Displays the info and update page of a given URL's key.
 app.get("/urls/:id", (req, res) => {
-  let user_id = req.session.user_id;
-  if (!user_id) {
+  const userId = req.session.userId;
+  if (!userId) {
     res.redirect("/");
-  }
-  else {
+  } else if (getArrayIndexOfUrl(state[USERS], userId, req.params.id) < 0) {
+    res.status(403).redirect("/errors/403");
+  } else {
     let templateVars = {
       shortURL: req.params.id,
-      urls: urlDatabase,
-      stats: analytics,
-      user_id: users[user_id]
+      urls: state[URL_DATABASE],
+      stats: state[ANALYTICS],
+      userId: state[USERS][userId],
     };
     res.render("urls_show", templateVars);
   }
@@ -269,21 +207,20 @@ app.get("/urls/:id", (req, res) => {
 
 // Receives the request to update an existing URL, inserts the update and redirects to home.
 app.put("/urls/:id", (req, res) => {
-  let user_id = req.session.user_id;
-  if (user_id === undefined) {
+  const userId = req.session.userId;
+  const urlId = req.params.id;
+  if (!userId) {
     res.redirect("/urls");
   } else {
     // Find the index of the element in the array of shorturls that belong to the user.
-    let index = users[user_id].shorturls.findIndex(e => e === req.params.id);
-    if (users[user_id].shorturls[index] === req.params.id) {
-      urlDatabase[req.params.id] = req.body.longURL;
+    const shortURLIndex = getArrayIndexOfUrl(state[USERS], userId, urlId);
+    if (shortURLIndex > -1) {
+      state[URL_DATABASE][urlId] = req.body.longURL;
       res.redirect("/urls");
     } else {
       res.status(403).redirect("/errors/403");
-      //res.sendStatus(403);
     }
   }
-
 });
 
 // Receives the request to login, creates a cookie with the user received and redirects to home.
@@ -291,35 +228,34 @@ app.post("/login", (req, res) => {
   // Get password and email from the request body object.
   let reqPassword = req.body.password;
   let reqEmail = req.body.email;
-  // Get the user id cookie
-  let setCookie = req.session.user_id;
   // validate password and email
-  if (emailExists(users, reqEmail) && validEmailPassword(users, reqEmail, reqPassword)) {
-      // Password and email exist but there's no cookie.
-      // Get the userID as it is in the datasource and use it to set the cookie value.
-        req.session.user_id = getUserID(users, reqEmail, reqPassword);
-        res.redirect("/urls");
-
-    } else {
-      res.status(403).redirect("/errors/403");
-    }
-  });
+  if (
+    emailExists(state[USERS], reqEmail) &&
+    validEmailPassword(state[USERS], reqEmail, reqPassword)
+  ) {
+    // Password and email exist but there's no cookie yet.
+    // Get the userID as it is in the datasource and use it to set the cookie value.
+    req.session.userId = getUserObject(state[USERS], reqEmail).id;
+    res.redirect("/urls");
+  } else {
+    res.status(403).redirect("/errors/403");
+  }
+});
 
 // Receives the request to login, creates a cookie with the user received and redirects to home.
 app.get("/login", (req, res) => {
-  let user_id = req.session.user_id;
+  let userId = req.session.userId;
   let templateVars = {
-      user_id
-    };
+    userId,
+  };
   res.render("urls_login", templateVars);
 });
 
 // Renders an error info page.
-app.get("/errors/:sc", (req, res) => {
+app.get("/errors/:statusCode", (req, res) => {
   templateVars = {
-    sc: req.params.sc
-  }
-  console.log(templateVars);
+    statusCode: req.params.statusCode,
+  };
   res.render("urls_error", templateVars);
 });
 
@@ -331,39 +267,41 @@ app.get("/logout", (req, res) => {
 
 // Creates a register endpoint.
 app.get("/register", (req, res) => {
-  let user_id = req.session.user_id;
+  let userId = req.session.userId;
   let templateVars = {
-      user_id
-    };
+    userId,
+  };
   res.render("urls_register", templateVars);
 });
 
 // Inserts a new user
 app.post("/register", (req, res) => {
-  // get an array of all the emails in the users object.
-  // Use some to check if any of them matches the one sent by the user wanting to register.
-  let checkEmail = emailExists(users, req.body.email);
+  const checkEmail = emailExists(state[USERS], req.body.email);
 
   // Don't allow empty email or password to come in.
   if (req.body.email === "" || req.body.password === "") {
     // Bad request!
     res.status(400).redirect("/errors/400");
-    //res.sendStatus(400);
-  // Send Bad Request if the email exists already.
+    // Send Bad Request if the email exists already.
   } else if (checkEmail) {
     res.status(400).redirect("/errors/400");
     //res.sendStatus(400);
-  // if all good generate a new id and create a new key with the new registration info and set a cookie with the ID.
+    // if all good generate a new id and create a new key with the new registration info and set a cookie with the ID.
   } else {
     let tempID = generateRandomString(10, alphaNum);
 
     const password = req.body.password;
-    const hashed_password = bcrypt.hashSync(password, 10);
-    users[tempID] = {id: tempID, name: req.body.name, email: req.body.email, password: hashed_password, shorturls: []};
-    req.session.user_id = tempID;
+    const hashed_password = hashPassword(password);
+    state[USERS][tempID] = {
+      id: tempID,
+      name: req.body.name,
+      email: req.body.email,
+      password: hashed_password,
+      shorturls: [],
+    };
+    req.session.userId = tempID;
     res.redirect("/urls");
   }
-
 });
 
 app.listen(PORT, () => {

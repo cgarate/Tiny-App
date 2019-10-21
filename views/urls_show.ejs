@@ -37,10 +37,10 @@
               <td>Visitor</td>
               <td>Date</td>
             </tr>
-            <% arrayDetails.forEach(function(e) { %>
+            <% arrayDetails.forEach(function(visitorDetail) { %>
             <tr>
-              <td><%= e.visitorName %></td>
-              <td><%= e.timestamp %></td>
+              <td><%= visitorDetail.visitorName %></td>
+              <td><%= visitorDetail.timestamp %></td>
             </tr>
             <% }); %>
           </table>

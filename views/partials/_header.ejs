@@ -1,7 +1,6 @@
 
-<% if (!user_id) { %>
+<% if (!userId) { %>
 
-  <span><%= user_id %></span>
   <nav class="navbar navbar-default navbar-fixed-top">
     <div class="container">
       <ul class="nav navbar-nav navbar-left">
@@ -24,7 +23,7 @@
     </div>
   </nav>
 
-  <h1 class="page-header"><a href="/">Shrink it!</a> <small>Welcome back <%= user_id.name %>!</small></h1>
+  <h1 class="page-header"><a href="/">Shrink it!</a> <small>Welcome back <%= userId.name %>!</small></h1>
 <% } %>
 
 
