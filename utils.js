@@ -1,7 +1,9 @@
 const bcrypt = require("bcrypt");
 
-const UNIQUE_VISITS = "uniquevisits";
-const VISITS = "visits";
+const { UNIQUE_VISITS, VISITS } = require("./constants");
+
+const updateStore = (globalStore) => (stateSlice, payload) =>
+  (globalStore[stateSlice] = { ...globalStore[stateSlice], ...payload });
 
 const hashPassword = (password, saltRounds = 10) => {
   let salt = bcrypt.genSaltSync(saltRounds);
@@ -111,8 +113,23 @@ const getUserObject = (stateUsers = {}, email) =>
 const getArrayIndexOfUrl = (stateUsers, userId, urlId) =>
   stateUsers[userId].shorturls.findIndex((url) => url === urlId);
 
+const deleteURL = (stateURLs, urlId) => {
+  const { [urlId]: value, ...withoutURLId } = stateURLs;
+  return withoutURLId;
+};
+
+const deleteURLForUser = (stateUsers, userId, urlId) => ({
+  ...stateUsers,
+  [userId]: {
+    ...stateUsers[userId],
+    shorturls: stateUsers[userId].shorturls.filter((url) => url !== urlId),
+  },
+});
+
 module.exports = {
   emailExists,
+  deleteURL,
+  deleteURLForUser,
   generateRandomString,
   getArrayIndexOfUrl,
   getEmailList,
@@ -124,5 +141,6 @@ module.exports = {
   insertUniqueVisitCount,
   insertVisitCount,
   insertVisitDetail,
+  updateStore,
   validEmailPassword,
 };
