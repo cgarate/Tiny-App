@@ -1,13 +1,7 @@
 const { assert } = require("chai");
 const updateStore = require("../store");
-const {
-  testAnalytics,
-  testDetail,
-  testURLs,
-  testUsers,
-} = require("./testData");
 
-const { URL_DATABASE, ANALYTICS, USERS } = require("../constants");
+const { USERS } = require("../constants");
 
 mockStore = { urlDatabase: {}, analytics: {}, users: {} };
 const testUpdateStore = updateStore(mockStore);
