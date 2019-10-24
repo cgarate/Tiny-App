@@ -1,4 +1,4 @@
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 3001;
 const COOKIE_KEY_1 =
   process.env.COOKIE_KEY_1 || "$uperCaliFragilisticoEspialidoso2019";
 const COOKIE_KEY_2 =
@@ -6,7 +6,7 @@ const COOKIE_KEY_2 =
   "ThePathOfTheRighteousManIsBesetOnAllSidesByTheInequities...PulpFiction.Quotes";
 const COOKIE_KEY_3 = process.env.COOKIE_KEY_3 || "apqmzorucg1029387465";
 
-const URL_DATABASE = "urlDatabase";
+const URLS = "urls";
 const ANALYTICS = "analytics";
 const USERS = "users";
 
@@ -20,7 +20,7 @@ module.exports = {
   COOKIE_KEY_3,
   PORT,
   UNIQUE_VISITS,
-  URL_DATABASE,
+  URLS,
   USERS,
   VISITS,
 };

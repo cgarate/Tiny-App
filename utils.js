@@ -113,10 +113,13 @@ const getUserObject = (stateUsers = {}, email) =>
 const getArrayIndexOfUrl = (stateUsers, userId, urlId) =>
   stateUsers[userId].shorturls.findIndex((url) => url === urlId);
 
-const deleteURL = (stateURLs, urlId) => {
-  const { [urlId]: value, ...withoutURLId } = stateURLs;
-  return withoutURLId;
-};
+const deleteURL = (stateURLs, urlId) => ({
+  ...stateURLs,
+  [urlId]: {
+    ...stateURLs[urlId],
+    active: false,
+  },
+});
 
 const deleteURLForUser = (stateUsers, userId, urlId) => ({
   ...stateUsers,

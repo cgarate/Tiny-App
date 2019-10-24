@@ -41,11 +41,11 @@ const testUsers = {
 };
 
 const testURLs = {
-  b2xVn2: "http://www.example.ca",
-  "9sm5xK": "http://www.example.io",
-  c1tI2c: "http://www.example.com.mx",
-  "8e3tv1": "http://www.example.com",
-  "4ttQiE": "http://example.co.uk",
+  b2xVn2: { url: "http://www.example.ca", active: true },
+  "9sm5xK": { url: "http://www.example.io", active: true },
+  c1tI2c: { url: "http://www.example.com.mx", active: true },
+  "8e3tv1": { url: "http://www.example.com", active: true },
+  "4ttQiE": { url: "http://example.co.uk", active: true },
 };
 
 module.exports = { testURLs, testDetail, testAnalytics };

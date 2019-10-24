@@ -1,6 +1,6 @@
 // Our data sources for the moment.
 global.__STORE__ = {
-  urlDatabase: {},
+  urls: {},
   analytics: {},
   users: {},
 };

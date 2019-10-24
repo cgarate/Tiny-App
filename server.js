@@ -24,7 +24,7 @@ const {
 // Get the global store object
 const store = require("./store");
 const {
-  URL_DATABASE,
+  URLS,
   ANALYTICS,
   USERS,
   PORT,
@@ -64,7 +64,7 @@ app.get("/", (req, res) => {
 
 // Serve up a JSON file of our urls data.
 app.get("/urls.json", (req, res) => {
-  res.json(store[URL_DATABASE]);
+  res.json(store[URLS]);
 });
 
 // Serve up a JSON file of our analytics data.
@@ -95,7 +95,7 @@ app.get("/urls", (req, res) => {
   !userId
     ? res.redirect("/login")
     : res.render("urls_index", {
-        urls: store[URL_DATABASE],
+        urls: store[URLS],
         userId: store[USERS][userId],
       });
 });
@@ -106,11 +106,11 @@ app.post("/urls", (req, res) => {
   const shortURL = generateRandomString(10, alphaNum);
   const longURL = req.body.longURL;
   const userId = req.session.userId;
-  const newStateURL = insertNewURL(store[URL_DATABASE], {
-    [shortURL]: longURL,
+  const newStateURL = insertNewURL(store[URLS], {
+    [shortURL]: { url: longURL, active: true },
   });
   const newStateUser = insertNewURLForUser(store[USERS], userId, shortURL);
-  updateState(URL_DATABASE, newStateURL);
+  updateState(URLS, newStateURL);
   updateState(USERS, newStateUser);
   res.redirect("/urls/");
 });
@@ -119,14 +119,15 @@ app.post("/urls", (req, res) => {
 app.delete("/urls/:id", (req, res) => {
   const userId = req.session.userId;
   const urlId = req.params.id;
+
   // Find the index of the element in the array of shorturls that belong to the user.
   const shortURLIndex = getArrayIndexOfUrl(store[USERS], userId, urlId);
   const newStateUser = deleteURLForUser(store[USERS], userId, urlId);
+  const newStateURL = deleteURL(store[URLS], urlId);
+
   updateState(USERS, newStateUser);
-  const newStateURL = deleteURL(store[URL_DATABASE], urlId);
-  console.log('newStateURL', newStateURL)
-  updateState(URL_DATABASE, newStateURL);
-  console.log('test',updateState(URL_DATABASE, newStateURL))
+  updateState(URLS, newStateURL);
+
   if (shortURLIndex > -1) {
     res.redirect("/urls");
   } else {
@@ -145,7 +146,7 @@ app.get("/u/:shortURL", (req, res) => {
     ? "Non-Registered User"
     : store[USERS][req.session.userId].name;
 
-  const longURL = store[URL_DATABASE][req.params.shortURL];
+  const longURL = store[URLS][req.params.shortURL].url;
 
   // Do this FIRST! Check if user has visited the link, if not add 1 visit to the unique visit counter.
   const newStateURL =
@@ -192,7 +193,7 @@ app.get("/urls/:id", (req, res) => {
   } else {
     let templateVars = {
       shortURL: req.params.id,
-      urls: store[URL_DATABASE],
+      urls: store[URLS],
       stats: store[ANALYTICS],
       userId: store[USERS][userId],
     };
@@ -210,7 +211,7 @@ app.put("/urls/:id", (req, res) => {
     // Find the index of the element in the array of shorturls that belong to the user.
     const shortURLIndex = getArrayIndexOfUrl(store[USERS], userId, urlId);
     if (shortURLIndex > -1) {
-      store[URL_DATABASE][urlId] = req.body.longURL;
+      store[URLS][urlId].url = req.body.longURL;
       res.redirect("/urls");
     } else {
       res.status(403).redirect("/errors/403");
