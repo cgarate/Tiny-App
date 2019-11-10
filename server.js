@@ -5,6 +5,8 @@ const bodyParser = require("body-parser");
 const methodOverride = require("method-override");
 const {
   emailExists,
+  deleteURL,
+  deleteURLForUser,
   generateRandomString,
   getArrayIndexOfUrl,
   getUserObject,
@@ -16,24 +18,30 @@ const {
   insertVisitCount,
   insertVisitDetail,
   validEmailPassword,
+  updateStore,
 } = require("./utils");
+
+// Get the global store object
+const store = require("./store");
+const {
+  URLS,
+  ANALYTICS,
+  USERS,
+  PORT,
+  COOKIE_KEY_1,
+  COOKIE_KEY_2,
+  COOKIE_KEY_3,
+} = require("./constants");
 
 require("dotenv").config();
 
 const app = express();
-const PORT = process.env.PORT || 8080;
-const cookieKey1 =
-  process.env.COOKIE_KEY_1 || "SuperCaliFragilisticoEspialidoso2019";
-const cookieKey2 =
-  process.env.COOKIE_KEY_2 ||
-  "ThePathOfTheRighteousManIsBesetByTheInequities.PulpFiction.Quotes";
-const cookieKey3 = process.env.COOKIE_KEY_3 || "apqmzorucg1029387465";
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(
   cookieSession({
     name: "session",
-    keys: [cookieKey1, cookieKey2, cookieKey3],
+    keys: [COOKIE_KEY_1, COOKIE_KEY_2, COOKIE_KEY_3],
   }),
 );
 
@@ -43,20 +51,8 @@ app.use(methodOverride("_method"));
 // Using EJS as a template engine
 app.set("view engine", "ejs");
 
-const URL_DATABASE = "urlDatabase";
-const ANALYTICS = "analytics";
-const USERS = "users";
-
-// Our data sources for the moment.
-let state = {
-  urlDatabase: {},
-  analytics: {},
-  users: {},
-};
-
-const updateState = (stateSlice, payload) => {
-  state = { ...state, [stateSlice]: { ...payload } };
-};
+// Init the updateState helper
+const updateState = updateStore(store);
 
 const alphaNum =
   "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -68,74 +64,71 @@ app.get("/", (req, res) => {
 
 // Serve up a JSON file of our urls data.
 app.get("/urls.json", (req, res) => {
-  res.json(state[URL_DATABASE]);
+  res.json(store[URLS]);
 });
 
 // Serve up a JSON file of our analytics data.
 app.get("/stats.json", (req, res) => {
-  res.json(state[ANALYTICS]);
+  res.json(store[ANALYTICS]);
 });
 
 // Serve up a JSON file of our users data.
 app.get("/users.json", (req, res) => {
-  res.json(state[USERS]);
+  res.json(store[USERS]);
 });
 
 // Render the template to create a new URL
 app.get("/urls/new", (req, res) => {
   // Read the cookie and send the user id object to the _header
-  let userId = req.session.userId;
-  if (!userId) {
-    res.redirect("/login");
-  } else {
-    const templateVars = {
-      userId: state[USERS][userId],
-    };
-    res.render("urls_new", templateVars);
-  }
+  const userId = req.session.userId;
+  !userId
+    ? res.redirect("/login")
+    : res.render("urls_new", {
+        userId: store[USERS][userId],
+      });
 });
 
 // Renders the index
 app.get("/urls", (req, res) => {
   // Read the cookie and send the user id object to the _header
-  let userId = req.session.userId;
-  if (!userId) {
-    res.redirect("/login");
-  } else {
-    let templateVars = {
-      urls: state[URL_DATABASE],
-      userId: state[USERS][userId],
-    };
-    res.render("urls_index", templateVars);
-  }
+  const userId = req.session.userId;
+  !userId
+    ? res.redirect("/login")
+    : res.render("urls_index", {
+        urls: store[URLS],
+        userId: store[USERS][userId],
+      });
 });
 
 // Inserts a new URL in our object.
 // Receives the request to create a new URL, creates a random alphanumeric string to be the new key and updates the JS Data Object.
 app.post("/urls", (req, res) => {
-  const shortURL = generateRandomString(6, alphaNum);
+  const shortURL = generateRandomString(10, alphaNum);
   const longURL = req.body.longURL;
   const userId = req.session.userId;
-  const newStateURL = insertNewURL(state[URL_DATABASE], {
-    [shortURL]: longURL,
+  const newStateURL = insertNewURL(store[URLS], {
+    [shortURL]: { url: longURL, active: true },
   });
-  const newStateUser = insertNewURLForUser(state[USERS], userId, shortURL);
-  updateState(URL_DATABASE, newStateURL);
+  const newStateUser = insertNewURLForUser(store[USERS], userId, shortURL);
+  updateState(URLS, newStateURL);
   updateState(USERS, newStateUser);
-  res.redirect(`/urls/`);
+  res.redirect("/urls/");
 });
 
 // Receives the request to delete a URL. Deletes the key and redirects to home.
 app.delete("/urls/:id", (req, res) => {
   const userId = req.session.userId;
   const urlId = req.params.id;
+
   // Find the index of the element in the array of shorturls that belong to the user.
-  const shortURLIndex = getArrayIndexOfUrl(state[USERS], userId, urlId);
+  const shortURLIndex = getArrayIndexOfUrl(store[USERS], userId, urlId);
+  const newStateUser = deleteURLForUser(store[USERS], userId, urlId);
+  const newStateURL = deleteURL(store[URLS], urlId);
+
+  updateState(USERS, newStateUser);
+  updateState(URLS, newStateURL);
 
   if (shortURLIndex > -1) {
-    delete state[URL_DATABASE][req.params.id];
-    // Remove the URL from the users' array.
-    state[USERS][userId].shorturls.splice(shortURLIndex, 1);
     res.redirect("/urls");
   } else {
     res.status(403).redirect("/errors/403");
@@ -146,19 +139,22 @@ app.delete("/urls/:id", (req, res) => {
 app.get("/u/:shortURL", (req, res) => {
   // If the request comes from a non-authenticated user create a cookie to track visits.
   req.session.userId = !req.session.userId
-    ? generateRandomString(10, alphaNum)
+    ? generateRandomString(15, alphaNum)
     : req.session.userId;
 
-  const username = !state[USERS][req.session.userId]
+  const username = !store[USERS][req.session.userId]
     ? "Non-Registered User"
-    : state[USERS][req.session.userId].name;
+    : store[USERS][req.session.userId].name;
 
-  const longURL = state[URL_DATABASE][req.params.shortURL];
+  const longURL = store[URLS][req.params.shortURL].url;
 
   // Do this FIRST! Check if user has visited the link, if not add 1 visit to the unique visit counter.
   const newStateURL =
-    !hasUserVisited(req.session.userId, req.params.shortURL, state[ANALYTICS]) &&
-    insertUniqueVisitCount(req.params.shortURL, state[ANALYTICS]);
+    !hasUserVisited(
+      req.session.userId,
+      req.params.shortURL,
+      store[ANALYTICS],
+    ) && insertUniqueVisitCount(req.params.shortURL, store[ANALYTICS]);
 
   if (newStateURL) {
     updateState(ANALYTICS, newStateURL);
@@ -167,7 +163,7 @@ app.get("/u/:shortURL", (req, res) => {
   // register this visit after the unique visit.
   updateState(
     ANALYTICS,
-    insertVisitCount(req.params.shortURL, state[ANALYTICS]),
+    insertVisitCount(req.params.shortURL, store[ANALYTICS]),
   );
 
   // Create timestamp and object for visit detail.
@@ -180,7 +176,7 @@ app.get("/u/:shortURL", (req, res) => {
   const newStateAnalytics = insertVisitDetail(
     req.params.shortURL,
     visitDetails,
-    state[ANALYTICS],
+    store[ANALYTICS],
   );
   updateState(ANALYTICS, newStateAnalytics);
 
@@ -192,14 +188,14 @@ app.get("/urls/:id", (req, res) => {
   const userId = req.session.userId;
   if (!userId) {
     res.redirect("/");
-  } else if (getArrayIndexOfUrl(state[USERS], userId, req.params.id) < 0) {
+  } else if (getArrayIndexOfUrl(store[USERS], userId, req.params.id) < 0) {
     res.status(403).redirect("/errors/403");
   } else {
     let templateVars = {
       shortURL: req.params.id,
-      urls: state[URL_DATABASE],
-      stats: state[ANALYTICS],
-      userId: state[USERS][userId],
+      urls: store[URLS],
+      stats: store[ANALYTICS],
+      userId: store[USERS][userId],
     };
     res.render("urls_show", templateVars);
   }
@@ -213,9 +209,9 @@ app.put("/urls/:id", (req, res) => {
     res.redirect("/urls");
   } else {
     // Find the index of the element in the array of shorturls that belong to the user.
-    const shortURLIndex = getArrayIndexOfUrl(state[USERS], userId, urlId);
+    const shortURLIndex = getArrayIndexOfUrl(store[USERS], userId, urlId);
     if (shortURLIndex > -1) {
-      state[URL_DATABASE][urlId] = req.body.longURL;
+      store[URLS][urlId].url = req.body.longURL;
       res.redirect("/urls");
     } else {
       res.status(403).redirect("/errors/403");
@@ -230,12 +226,12 @@ app.post("/login", (req, res) => {
   let reqEmail = req.body.email;
   // validate password and email
   if (
-    emailExists(state[USERS], reqEmail) &&
-    validEmailPassword(state[USERS], reqEmail, reqPassword)
+    emailExists(store[USERS], reqEmail) &&
+    validEmailPassword(store[USERS], reqEmail, reqPassword)
   ) {
     // Password and email exist but there's no cookie yet.
     // Get the userID as it is in the datasource and use it to set the cookie value.
-    req.session.userId = getUserObject(state[USERS], reqEmail).id;
+    req.session.userId = getUserObject(store[USERS], reqEmail).id;
     res.redirect("/urls");
   } else {
     res.status(403).redirect("/errors/403");
@@ -276,7 +272,7 @@ app.get("/register", (req, res) => {
 
 // Inserts a new user
 app.post("/register", (req, res) => {
-  const checkEmail = emailExists(state[USERS], req.body.email);
+  const checkEmail = emailExists(store[USERS], req.body.email);
 
   // Don't allow empty email or password to come in.
   if (req.body.email === "" || req.body.password === "") {
@@ -288,11 +284,11 @@ app.post("/register", (req, res) => {
     //res.sendStatus(400);
     // if all good generate a new id and create a new key with the new registration info and set a cookie with the ID.
   } else {
-    let tempID = generateRandomString(10, alphaNum);
+    let tempID = generateRandomString(15, alphaNum);
 
     const password = req.body.password;
     const hashed_password = hashPassword(password);
-    state[USERS][tempID] = {
+    store[USERS][tempID] = {
       id: tempID,
       name: req.body.name,
       email: req.body.email,

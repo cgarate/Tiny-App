@@ -20,7 +20,7 @@
     <table class="table">
     <% userId.shorturls.forEach(function(urlid) { %>
     <tr>
-      <td><%= urls[urlid] %> </td>
+      <td><%= urls[urlid].url %> </td>
       <td><a href="/u/<%= urlid %>" target="_new">http://<%= urlid %></a></td>
       <td><a href="/urls/<%= urlid %>" role="button">Edit</a></td>
       <td>
