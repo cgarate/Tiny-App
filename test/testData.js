@@ -48,4 +48,4 @@ const testURLs = {
   "4ttQiE": { url: "http://example.co.uk", active: true },
 };
 
-module.exports = { testURLs, testDetail, testAnalytics };
+module.exports = { testURLs, testDetail, testAnalytics, testUsers };
