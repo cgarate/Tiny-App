@@ -186,15 +186,21 @@ app.get("/u/:shortURL", (req, res) => {
 // Displays the info and update page of a given URL's key.
 app.get("/urls/:id", (req, res) => {
   const userId = req.session.userId;
+  const urlAnalytics = store[ANALYTICS][req.params.id];
   if (!userId) {
     res.redirect("/");
   } else if (getArrayIndexOfUrl(store[USERS], userId, req.params.id) < 0) {
     res.status(403).redirect("/errors/403");
   } else {
+    const analyticDetails = {
+      showVisits: urlAnalytics ? urlAnalytics.visits : 0,
+      showUniqueVisits: urlAnalytics ? urlAnalytics.uniquevisits : 0,
+      arrayDetails: urlAnalytics ? urlAnalytics.details : [],
+    };
     let templateVars = {
       shortURL: req.params.id,
       urls: store[URLS],
-      stats: store[ANALYTICS],
+      ...analyticDetails,
       userId: store[USERS][userId],
     };
     res.render("urls_show", templateVars);
@@ -281,7 +287,6 @@ app.post("/register", (req, res) => {
     // Send Bad Request if the email exists already.
   } else if (checkEmail) {
     res.status(400).redirect("/errors/400");
-    //res.sendStatus(400);
     // if all good generate a new id and create a new key with the new registration info and set a cookie with the ID.
   } else {
     let tempID = generateRandomString(15, alphaNum);
